@@ -1,0 +1,26 @@
+body {
+	position: relative;
+	height: 100%
+}
+
+.map {
+	position: fixed;
+	height: 100%;
+	width: 50%;
+	top:0;
+	left:0;
+	bottom:0;
+	background-color: red;
+}
+
+.pics {
+	position: relative;
+	left:50%;
+	width: 50%;
+}
+
+.states {
+	fill: none;
+	stroke: #fff;
+	stroke-linejoin: round;
+}

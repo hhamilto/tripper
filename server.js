@@ -1,5 +1,5 @@
 express = require('express')
-
+_ = require('lodash')
 fs = require('fs')
 
 app = express()
@@ -12,7 +12,12 @@ app.get('/pics', function(req,res){
 			res.send(err)
 			res.done()
 		}
-		res.json(files)
+		res.json(_.map(files, function(filename){
+			return {
+					filename:filename,
+					id: filename.replace(/\./g,'')
+				}
+			}))
 	})
 })
 

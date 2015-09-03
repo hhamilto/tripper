@@ -10,24 +10,38 @@
 
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"><link rel="stylesheet" href="css/main.css">
 
+</head>
+<body>
+
+	<div id="js-map" class="map"></div>
+	<div id="js-pics" class="pics"></div>
+
+	<script type="text/template" id="pics-list-template">
+	</script>
+
+	<script type="text/template" id="pic-item-template">
+		<img src='/pics/<%=filename%>' />
+		<form role="form">
+			<label for="location">Location:</label>
+			<input class="input-item" name="location" type="text"/>
+		</form>
+	</script>
+
+	<script type="text/template" id="map-template">
+		<svg>
+		</svg>
+	</script>
+
+
+
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.7.0/lodash.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-
-</head>
-<body>
-	<div id="js-app-container">
-	</div>
-
-	<script type="text/template" id="pics-list-template">
-		
-		<% files.forEach(function(file){%>
-			<img src='/pics/<%=file%>' />
-		<%})%>
-	</script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.19/topojson.min.js"></script>
 
 	<script src="js/main.js"></script>
 
 </body>
-</html>
+</html>JPG
