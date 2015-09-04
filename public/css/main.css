@@ -24,3 +24,10 @@ body {
 	stroke: #fff;
 	stroke-linejoin: round;
 }
+
+.city {
+	fill: #F0F;
+	stroke: #fff;
+	stroke-linejoin: round;
+	width: 40px;
+}

@@ -4,6 +4,13 @@ usDfd = $.ajax({
 	method: 'GET',
 	dataType: 'json'
 })
+
+
+var geocoderDfd = $.Deferred()
+initGeocoderCallback = function(){
+	geocoderDfd.resolve(new google.maps.Geocoder())
+}
+
 $(document).ready(function(){
 
 	var PicsView = Backbone.View.extend({
@@ -11,13 +18,10 @@ $(document).ready(function(){
 		initialize: function(){
 			var picInfos
 			this.$el.attr('id','js-pic-list')
-			$.ajax({
-				url:'pics',
-				method: 'GET',
-				dataType: 'json',
-			}).done(function(files){
-				this.picViews = _.map(files, function(file){
-					var picView = new PicView({model:file})
+			ImageData.done(function(ImageData){
+				var picInfos = ImageData.getPicInfos()
+				this.picViews = _.map(picInfos, function(picInfo){
+					var picView = new PicView({model:picInfo})
 					picView.$el.appendTo(this.$el)
 					return picView
 				}.bind(this))
@@ -36,6 +40,7 @@ $(document).ready(function(){
 					})
 
 				}.bind(this))
+
 			}.bind(this))
 
 		}
@@ -62,14 +67,13 @@ $(document).ready(function(){
 			this.height = this.$el.height()
 		},
 		locationChanged: function(e){
-			$.ajax({
-				url: 'pics/'+this.model.id+'/location',
-				method: 'PUT',
-				data: $(e.target).val()
-			})
-		}
+			console.log(this.model)
+			var newLocation = $(e.target).val()
+			ImageData.done(function(ImageData){
+				ImageData.setLocationForPic(this.model, newLocation)
+			}.bind(this))		
+		},
 	})
-
 
 
 
@@ -77,32 +81,60 @@ $(document).ready(function(){
 
 	var MapView = Backbone.View.extend({
 		template: _.template($('#map-template').html()),
-		render: function(){
+		initialize: function(){
 			this.$el.attr('style','height:100%')
+			this.generateLocationFeatures()
+			this.svg = d3.select(this.$el.append('<svg></svg>').find('svg').get(0))
+			ImageData.done(function(ImageData){
+				ImageData.on('locationUpdated', function(model){
+					var locationFeature = _.find(this.locations.features, function(feature){
+						return feature.properties.id == model.id
+					})
+					if(!locationFeature){
+						this.generateLocationFeatures()
+					}else{
+						locationFeature.coordinates = model.location.coordinates
+					}
+					this.renderRoute()
+				}.bind(this))
+			}.bind(this))
+			this.render()
+		},
+		generateLocationFeatures: function(){
+			this.locations = { "type": "FeatureCollection", "features": []}
+			ImageData.done(function(ImageData){
+				this.locations.features = _.compact(_.map(ImageData.getPicInfos(), function(picInfo){
+					if(!picInfo.location) return
+					return { "type": "Feature",
+						"geometry": {"type": "Point", "coordinates": picInfo.location.coordinates },
+						"properties": {"id": picInfo.id}
+					}
+				}))
+			}.bind(this))
+								
+		},
+		renderFlowControl: {
+			inProgress: false,
+			requested: false
+		},
+		render: function(){
+			if(this.renderFlowControl.inProgress){
+				this.renderFlowControl.requested = true
+				return
+			}
+			this.renderFlowControl.inProgress = true
+			this.renderFlowControl.requested = false
 			var width=this.$el.width(), height = this.$el.height()
-			var projection = d3.geo.albersUsa()
+			var projection = this.projection = d3.geo.albersUsa()
 				.scale(1280)
 				.translate([width / 2, height / 2])
-
-			var path = d3.geo.path()
+			var path = this.path = d3.geo.path()
 				.projection(projection)
-
-			var svg = d3.select(this.$el.append('<svg></svg>').find('svg').get(0))
-			  .attr("width", width)
+			var svg = this.svg
+			svg.selectAll('*').remove()
+			svg.attr("width", width)
 			  .attr("height", height)
 			usDfd.done(function(us){
-				console.log(us)	
-				svg.append("g")
-				  .attr("class", "counties")
-				/*
-				.selectAll("path")
-				  
-				.enter()
-
-				.append("path")
-				  .attr("class", function(d) { return quantize(rateById.get(d.id)); })
-				  .attr("d", path)*/
-
 				svg.append("path")
 				  .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b }))
 				  .attr("class", "states")
@@ -112,7 +144,27 @@ $(document).ready(function(){
 				  .datum(topojson.feature(us, us.objects.land))
 				  .attr("class", "states")
 				  .attr("d", path)
-			})
+
+				svg.append("path")
+				  .attr("class", "city")
+
+				this.renderFlowControl.inProgress = false
+				if(this.renderFlowControl.requested){
+					this.render()
+				}
+			}.bind(this))
+			this.renderRoute()
+		},
+		renderRoute: function(renderRoute){
+			//ex: { "type": "Point", "coordinates": [100.0, 0.0] }
+			console.log("Rendering route", this.locations)
+			var svg = this.svg
+			var path = this.path
+			svg.select("path.city")
+				  .datum(this.locations)
+				  .attr("class", "city")
+				  .attr("d", path)
+
 		}
 	})
 
