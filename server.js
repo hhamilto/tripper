@@ -29,12 +29,11 @@ app.get('/pics', function(req,res){
 		}
 		res.json(_.map(files, function(filename){
 			var picid = filename.replace(/\./g,'')
-			var pic = getPicById(req.params.id)
-			return {
+			var pic = getPicById(picid)
+			return _.defaults({
 					filename:filename,
-					id: picid,
-					info: pic
-				}
+					id: picid
+				}, pic)
 			}))
 	})
 })
@@ -44,7 +43,7 @@ app.put('/pics/:id/location', function(req,res){
 	var pic = getPicById(req.params.id)
 	pic.location = req.body
 	fs.writeFile('./picData.json', JSON.stringify(picData))
-	res.send(200)
+	res.sendStatus(200)
 })
 
 

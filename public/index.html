@@ -23,7 +23,7 @@
 		<img src='/pics/<%=filename%>' />
 		<form role="form">
 			<label for="location">Location:</label>
-			<input class="input-item" name="location" type="text"/>
+			<input class="input-item" name="location" type="text" value="<%=typeof location != 'undefined' ?location.text:""%>" />
 		</form>
 	</script>
 

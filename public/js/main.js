@@ -25,6 +25,7 @@ $(document).ready(function(){
 					picView.$el.appendTo(this.$el)
 					return picView
 				}.bind(this))
+				this.picInView = this.picViews[0]
 
 				$(window).on('scroll', function(){
 					var scrollTop = $(window).scrollTop()
@@ -34,10 +35,10 @@ $(document).ready(function(){
 						picView.render()
 						if(picView.topOffset < ( scrollTop + 1/2 * windowHeight) &&
 						       picView.topOffset + picView.height > ( scrollTop + 1/2 * windowHeight) )
-							picView.select()
+							picView.select(), this.emit('viewing', picView), this.picInView = picView
 						else
 							picView.unselect()
-					})
+					}.bind(this))
 
 				}.bind(this))
 
@@ -81,30 +82,37 @@ $(document).ready(function(){
 
 	var MapView = Backbone.View.extend({
 		template: _.template($('#map-template').html()),
-		initialize: function(){
+		initialize: function(options){
+			_.bindAll(this)
+			this.picsView = options.picsView
+			this.picsView.on('viewing', this.render)
 			this.$el.attr('style','height:100%')
 			this.generateLocationFeatures()
 			this.svg = d3.select(this.$el.append('<svg></svg>').find('svg').get(0))
 			ImageData.done(function(ImageData){
+				this.ImageData = ImageData
 				ImageData.on('locationUpdated', function(model){
 					var locationFeature = _.find(this.locations.features, function(feature){
 						return feature.properties.id == model.id
 					})
 					if(!locationFeature){
-						this.generateLocationFeatures()
+						this.generateLocationFeatures().done(this.renderRoute)
 					}else{
-						locationFeature.coordinates = model.location.coordinates
+						locationFeature.geometry.coordinates = model.location.coordinates
+						this.renderRoute()
 					}
-					this.renderRoute()
 				}.bind(this))
+				this.generateLocationFeatures().done(this.renderRoute)
 			}.bind(this))
 			this.render()
+			$(window).on('resize', this.render)
 		},
 		generateLocationFeatures: function(){
 			this.locations = { "type": "FeatureCollection", "features": []}
-			ImageData.done(function(ImageData){
+			return ImageData.done(function(ImageData){
 				this.locations.features = _.compact(_.map(ImageData.getPicInfos(), function(picInfo){
 					if(!picInfo.location) return
+
 					return { "type": "Feature",
 						"geometry": {"type": "Point", "coordinates": picInfo.location.coordinates },
 						"properties": {"id": picInfo.id}
@@ -126,7 +134,7 @@ $(document).ready(function(){
 			this.renderFlowControl.requested = false
 			var width=this.$el.width(), height = this.$el.height()
 			var projection = this.projection = d3.geo.albersUsa()
-				.scale(1280)
+				.scale(width*1.3)
 				.translate([width / 2, height / 2])
 			var path = this.path = d3.geo.path()
 				.projection(projection)
@@ -136,34 +144,59 @@ $(document).ready(function(){
 			  .attr("height", height)
 			usDfd.done(function(us){
 				svg.append("path")
+				  .datum(topojson.feature(us, us.objects.land))
+				  .attr("class", "states")
+				  .attr("d", path)
+				svg.append("path")
 				  .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b }))
 				  .attr("class", "states")
 				  .attr("d", path)
 
 				svg.append("path")
-				  .datum(topojson.feature(us, us.objects.land))
-				  .attr("class", "states")
-				  .attr("d", path)
-
-				svg.append("path")
 				  .attr("class", "city")
+				svg.append("path")
+				  .attr("class", "travelRoute")
+				this.renderRoute()
 
 				this.renderFlowControl.inProgress = false
 				if(this.renderFlowControl.requested){
 					this.render()
 				}
 			}.bind(this))
-			this.renderRoute()
 		},
 		renderRoute: function(renderRoute){
 			//ex: { "type": "Point", "coordinates": [100.0, 0.0] }
-			console.log("Rendering route", this.locations)
+			var viewedCoords = ImageData.getLocationFor(this.picsView.picInView.model).coordinates
+			console.log("Rendering locations:", this.locations)
+			var travelRoutePlaces = { "type": "FeatureCollection", "features": 
+				_.takeWhile(this.locations.features, function(feature){
+					return feature.geometry.coordinates != viewedCoords
+				})
+			}
+			var travelRouteLine = { "type": "FeatureCollection", "features": [
+				{ "type": "Feature",
+						"geometry": {"type": "LineString", "coordinates": 
+							_.map(travelRoutePlaces.features, function(feature){
+								return feature.geometry.coordinates
+							})
+						 },
+				}
+			]}
+			//_.takeWhile(array
+
 			var svg = this.svg
 			var path = this.path
 			svg.select("path.city")
-				  .datum(this.locations)
-				  .attr("class", "city")
+			  .datum(this.locations)
+			  .attr("d", path)
+
+			if(this.locations.features.length >= 2){
+				console.log("Rendering route:", travelRouteLine)
+				svg.select("path.travelRoute")
+				  .datum(travelRouteLine)
 				  .attr("d", path)
+			}
+
 
 		}
 	})
@@ -171,7 +204,7 @@ $(document).ready(function(){
 
 
 	var picsView = new PicsView
-	var mapView = new MapView
+	var mapView = new MapView({picsView:picsView})
 
 	var appRouter = new Backbone.Router
 	appRouter.route('/*', '/', function(){

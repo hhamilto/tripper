@@ -54,8 +54,12 @@ ImageData = (function(){
 					'ZERO_RESULTS' != status && alert('Geocode was not successful for the following reason: ' + status);
 				}
 			}.bind(this))
-
-		},500)
+		},500),
+		getLocationFor: function(model){
+			var index = _.findIndex(pics, {id:model.id})//lets make sure we are using ours.
+			while(model = pics[index--])
+				if(model.location) return model.location
+		}
 	}
 
 	_.defaults(ImageData, EventEmitter)

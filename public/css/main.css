@@ -10,7 +10,6 @@ body {
 	top:0;
 	left:0;
 	bottom:0;
-	background-color: red;
 }
 
 .pics {
@@ -20,8 +19,8 @@ body {
 }
 
 .states {
-	fill: none;
-	stroke: #fff;
+	fill: #EEE;
+	stroke: #DDD;
 	stroke-linejoin: round;
 }
 
@@ -30,4 +29,11 @@ body {
 	stroke: #fff;
 	stroke-linejoin: round;
 	width: 40px;
+}
+
+.travelRoute {
+	fill: none;
+	stroke: #0F0;
+	stroke-linejoin: round;
+	width: 5px;
 }
