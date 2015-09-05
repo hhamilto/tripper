@@ -39,12 +39,21 @@ $(document).ready(function(){
 						else
 							picView.unselect()
 					}.bind(this))
-
 				}.bind(this))
-
 			}.bind(this))
+		},
 
+		eventHash: {},
+		on: function(event, func){
+			(this.eventHash[event] = this.eventHash[event] || []).push(func)
+		},
+		emit: function(event){
+			var args = Array.prototype.slice.call(arguments, 1)
+			!(this.eventHash[event] = this.eventHash[event] || []).forEach(function(fun){
+				fun.apply(null, args)
+			})
 		}
+
 	})
 
 	var PicView = Backbone.View.extend({
@@ -166,10 +175,11 @@ $(document).ready(function(){
 		},
 		renderRoute: function(renderRoute){
 			//ex: { "type": "Point", "coordinates": [100.0, 0.0] }
-			var viewedCoords = ImageData.getLocationFor(this.picsView.picInView.model).coordinates
+			if(!this.ImageData) return 
+			var viewedCoords = this.ImageData.getLocationFor(this.picsView.picInView.model).coordinates
 			console.log("Rendering locations:", this.locations)
 			var travelRoutePlaces = { "type": "FeatureCollection", "features": 
-				_.takeWhile(this.locations.features, function(feature){
+				_.dropRightWhile(this.locations.features, function(feature){
 					return feature.geometry.coordinates != viewedCoords
 				})
 			}
@@ -187,7 +197,7 @@ $(document).ready(function(){
 			var svg = this.svg
 			var path = this.path
 			svg.select("path.city")
-			  .datum(this.locations)
+			  .datum(travelRoutePlaces)
 			  .attr("d", path)
 
 			if(this.locations.features.length >= 2){
