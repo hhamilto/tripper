@@ -97,7 +97,17 @@ $(document).ready(function(){
 			this.picsView.on('viewing', this.render)
 			this.$el.attr('style','height:100%')
 			this.generateLocationFeatures()
-			this.svg = d3.select(this.$el.append('<svg></svg>').find('svg').get(0))
+			this.svg = svg = d3.select(this.$el.append('<svg></svg>').find('svg').get(0))
+
+			svg.append("path")
+			  .attr("class", "borders land")
+			svg.append("path")
+			  .attr("class", "borders states")
+			svg.append("path")
+			  .attr("class", "city")
+			svg.append("path")
+			  .attr("class", "travelRoute")
+			
 			ImageData.done(function(ImageData){
 				this.ImageData = ImageData
 				ImageData.on('locationUpdated', function(model){
@@ -148,23 +158,16 @@ $(document).ready(function(){
 			var path = this.path = d3.geo.path()
 				.projection(projection)
 			var svg = this.svg
-			svg.selectAll('*').remove()
 			svg.attr("width", width)
 			  .attr("height", height)
 			usDfd.done(function(us){
-				svg.append("path")
+				svg.select("path.land")
 				  .datum(topojson.feature(us, us.objects.land))
-				  .attr("class", "states")
 				  .attr("d", path)
-				svg.append("path")
+				svg.select("path.states")
 				  .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b }))
-				  .attr("class", "states")
 				  .attr("d", path)
 
-				svg.append("path")
-				  .attr("class", "city")
-				svg.append("path")
-				  .attr("class", "travelRoute")
 				this.renderRoute()
 
 				this.renderFlowControl.inProgress = false
