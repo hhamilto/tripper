@@ -15,7 +15,7 @@ EventEmitter = {
 ImageData = (function(){
 	var pics
 	$.ajax({
-		url:'pics',
+		url:'/pics/',
 		method: 'GET',
 		dataType: 'json',
 	}).done(function(picsFromServer){

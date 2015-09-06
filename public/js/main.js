@@ -5,17 +5,17 @@ usDfd = $.ajax({
 	dataType: 'json'
 })
 
-
-var geocoderDfd = $.Deferred()
-initGeocoderCallback = function(){
-	geocoderDfd.resolve(new google.maps.Geocoder())
+tstampLog = function(arg){
+	console.log('['+Date.now()+'] ' + arg)
 }
 
 $(document).ready(function(){
+	//lets group dom mods into one thing
 
 	var PicsView = Backbone.View.extend({
 		template: _.template($('#pics-list-template').html()),
 		initialize: function(){
+			tstampLog('PicsView instance START init\'ing')
 			var picInfos
 			this.$el.attr('id','js-pic-list')
 			ImageData.done(function(ImageData){
@@ -23,24 +23,27 @@ $(document).ready(function(){
 				this.picViews = _.map(picInfos, function(picInfo){
 					var picView = new PicView({model:picInfo})
 					picView.$el.appendTo(this.$el)
+					picView.render()
 					return picView
 				}.bind(this))
+				this.lasPicInView = null
 				this.picInView = this.picViews[0]
 
+				$window = $(window)
+				var windowHeight = $(window).height()
+				$(window).on('resize', _.throttle(function(){
+					var windowHeight = $window.height()
+				}, 300))
 				$(window).on('scroll', function(){
-					var scrollTop = $(window).scrollTop()
-					var windowHeight = $(window).height()
-
+					var scrollTop = $window.scrollTop()
 					_.each(this.picViews, function(picView){
-						picView.render()
 						if(picView.topOffset < ( scrollTop + 1/2 * windowHeight) &&
 						       picView.topOffset + picView.height > ( scrollTop + 1/2 * windowHeight) )
 							picView.select(), this.emit('viewing', picView), this.picInView = picView
-						else
-							picView.unselect()
 					}.bind(this))
 				}.bind(this))
 			}.bind(this))
+			tstampLog('PicsView instance DONE init\'ing')
 		},
 
 		eventHash: {},
@@ -94,7 +97,7 @@ $(document).ready(function(){
 		initialize: function(options){
 			_.bindAll(this)
 			this.picsView = options.picsView
-			this.picsView.on('viewing', this.render)
+			this.picsView.on('viewing', this.renderRoute)
 			this.$el.attr('style','height:100%')
 			this.generateLocationFeatures()
 			this.svg = svg = d3.select(this.$el.append('<svg></svg>').find('svg').get(0))
@@ -104,9 +107,9 @@ $(document).ready(function(){
 			svg.append("path")
 			  .attr("class", "borders states")
 			svg.append("path")
-			  .attr("class", "city")
-			svg.append("path")
 			  .attr("class", "travelRoute")
+			svg.append("path")
+			  .attr("class", "city")
 			
 			ImageData.done(function(ImageData){
 				this.ImageData = ImageData
@@ -124,7 +127,7 @@ $(document).ready(function(){
 				this.generateLocationFeatures().done(this.renderRoute)
 			}.bind(this))
 			this.render()
-			$(window).on('resize', this.render)
+			$(window).on('resize', _.throttle(this.render, 300))
 		},
 		generateLocationFeatures: function(){
 			this.locations = { "type": "FeatureCollection", "features": []}
@@ -144,11 +147,13 @@ $(document).ready(function(){
 			inProgress: false,
 			requested: false
 		},
-		render: function(){
+		render: function(force){
 			if(this.renderFlowControl.inProgress){
 				this.renderFlowControl.requested = true
 				return
 			}
+			//do we have to rerender
+
 			this.renderFlowControl.inProgress = true
 			this.renderFlowControl.requested = false
 			var width=this.$el.width(), height = this.$el.height()
@@ -176,10 +181,14 @@ $(document).ready(function(){
 				}
 			}.bind(this))
 		},
-		renderRoute: function(renderRoute){
+		renderRoute: function(force){
+			if(!force && this.oldPicInView == this.picsView.picInView) return
+			this.oldPicInView = this.picsView.picInView
 			//ex: { "type": "Point", "coordinates": [100.0, 0.0] }
-			if(!this.ImageData) return 
-			var viewedCoords = this.ImageData.getLocationFor(this.picsView.picInView.model).coordinates
+			if(!this.ImageData || !this.picsView.picInView.model) return 
+			var viewedLocation = this.ImageData.getLocationFor(this.picsView.picInView.model)
+			if(!viewedLocation) return
+			var viewedCoords = viewedLocation.coordinates
 			console.log("Rendering locations:", this.locations)
 			var travelRoutePlaces = { "type": "FeatureCollection", "features": 
 				_.dropRightWhile(this.locations.features, function(feature){
