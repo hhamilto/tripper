@@ -23,7 +23,6 @@ $(document).ready(function(){
 				this.picViews = _.map(picInfos, function(picInfo){
 					var picView = new PicView({model:picInfo})
 					picView.$el.appendTo(this.$el)
-					picView.render()
 					return picView
 				}.bind(this))
 				this.lasPicInView = null
@@ -37,12 +36,16 @@ $(document).ready(function(){
 				$(window).on('scroll', function(){
 					var scrollTop = $window.scrollTop()
 					_.each(this.picViews, function(picView){
+						if(picView.topOffset == -1) picView.updateOffset()
 						if(picView.topOffset < ( scrollTop + 1/2 * windowHeight) &&
 						       picView.topOffset + picView.height > ( scrollTop + 1/2 * windowHeight) )
-							picView.select(), this.emit('viewing', picView), this.picInView = picView
+							this.emit('viewing', picView), this.picInView = picView
 					}.bind(this))
 				}.bind(this))
 			}.bind(this))
+			this.on('viewing', function(){
+
+			})
 			tstampLog('PicsView instance DONE init\'ing')
 		},
 
@@ -64,6 +67,8 @@ $(document).ready(function(){
 		events: {
 			'input input': 'locationChanged'
 		},
+		height: -1,
+		topOffset: -1,
 		initialize: function(options){
 			_.bindAll(this)
 			this.$el.html(this.template(this.model))
@@ -75,7 +80,7 @@ $(document).ready(function(){
 		unselect: function(){
 			this.$el.attr('style','')
 		},
-		render: function(){
+		updateOffset: function(){
 			this.topOffset = this.$el.offset().top
 			this.height = this.$el.height()
 		},
