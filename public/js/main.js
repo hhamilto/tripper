@@ -20,11 +20,17 @@ $(document).ready(function(){
 			this.$el.attr('id','js-pic-list')
 			ImageData.done(function(ImageData){
 				var picInfos = ImageData.getPicInfos()
+
+
+				// throw them all in this thing, 
+				//so that they all render at once, instead of repainting, etc between every one.
+				var shadowContainer = $('<div></div>') 
 				this.picViews = _.map(picInfos, function(picInfo){
 					var picView = new PicView({model:picInfo})
-					picView.$el.appendTo(this.$el)
+					picView.$el.appendTo(shadowContainer)
 					return picView
 				}.bind(this))
+				this.$el.append(shadowContainer)
 				this.lasPicInView = null
 				this.picInView = this.picViews[0]
 
@@ -126,7 +132,7 @@ $(document).ready(function(){
 						this.generateLocationFeatures().done(this.renderRoute)
 					}else{
 						locationFeature.geometry.coordinates = model.location.coordinates
-						this.renderRoute()
+						this.renderRoute(true)
 					}
 				}.bind(this))
 				this.generateLocationFeatures().done(this.renderRoute)
@@ -178,7 +184,7 @@ $(document).ready(function(){
 				  .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b }))
 				  .attr("d", path)
 
-				this.renderRoute()
+				this.renderRoute(true)
 
 				this.renderFlowControl.inProgress = false
 				if(this.renderFlowControl.requested){
