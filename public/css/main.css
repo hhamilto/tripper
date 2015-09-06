@@ -25,15 +25,19 @@ body {
 }
 
 .city {
-	fill: #F0F;
-	stroke: #fff;
+	fill: #090;
 	stroke-linejoin: round;
-	width: 40px;
 }
 
-.travelRoute {
-	fill: none;
-	stroke: #0F0;
+.current-place {
+	fill: #0C0;
 	stroke-linejoin: round;
-	width: 5px;
+	box-shadow: 0 0 40px 40px  black;
+}
+
+.travel-route {
+	fill: none;
+	stroke: #060;
+	stroke-linejoin: round;
+	stroke-width: 3px;
 }

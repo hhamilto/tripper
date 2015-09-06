@@ -118,9 +118,11 @@ $(document).ready(function(){
 			svg.append("path")
 			  .attr("class", "borders states")
 			svg.append("path")
-			  .attr("class", "travelRoute")
+			  .attr("class", "travel-route")
 			svg.append("path")
 			  .attr("class", "city")
+			svg.append("path")
+			  .attr("class", "current-place")
 			
 			ImageData.done(function(ImageData){
 				this.ImageData = ImageData
@@ -129,7 +131,7 @@ $(document).ready(function(){
 						return feature.properties.id == model.id
 					})
 					if(!locationFeature){
-						this.generateLocationFeatures().done(this.renderRoute)
+						this.generateLocationFeatures().done(_.partial(this.renderRoute,true))
 					}else{
 						locationFeature.geometry.coordinates = model.location.coordinates
 						this.renderRoute(true)
@@ -215,17 +217,27 @@ $(document).ready(function(){
 						 },
 				}
 			]}
+			var travelRouteCurrentPlace = { "type": "FeatureCollection", "features": [
+				_.last(travelRoutePlaces.features)
+			]}
 			//_.takeWhile(array
 
 			var svg = this.svg
 			var path = this.path
+			path.pointRadius(4.5)
 			svg.select("path.city")
 			  .datum(travelRoutePlaces)
 			  .attr("d", path)
 
+			path.pointRadius(7)
+			console.log("Rendering current-place:", travelRouteCurrentPlace)
+			svg.select("path.current-place")
+			  .datum(travelRouteCurrentPlace)
+			  .attr("d", path)
+			
+
 			if(this.locations.features.length >= 2){
-				console.log("Rendering route:", travelRouteLine)
-				svg.select("path.travelRoute")
+				svg.select("path.travel-route")
 				  .datum(travelRouteLine)
 				  .attr("d", path)
 			}
