@@ -15,10 +15,11 @@ $(document).ready(function(){
 	var PicsView = Backbone.View.extend({
 		template: _.template($('#pics-list-template').html()),
 		initialize: function(){
-			tstampLog('PicsView instance START init\'ing')
+			_.bindAll(this)
 			var picInfos
 			this.$el.attr('id','js-pic-list')
 			ImageData.done(function(ImageData){
+				this.ImageData = ImageData
 				var picInfos = ImageData.getPicInfos()
 
 
@@ -34,25 +35,27 @@ $(document).ready(function(){
 				this.lasPicInView = null
 				this.picInView = this.picViews[0]
 
-				$window = $(window)
-				var windowHeight = $(window).height()
+				this.windowHeight = $(window).height()
 				$(window).on('resize', _.throttle(function(){
-					var windowHeight = $window.height()
+					this.windowHeight = $(window).height()
 				}, 300))
-				$(window).on('scroll', function(){
-					var scrollTop = $window.scrollTop()
-					_.each(this.picViews, function(picView){
-						if(picView.topOffset == -1) picView.updateOffset()
-						if(picView.topOffset < ( scrollTop + 1/2 * windowHeight) &&
-						       picView.topOffset + picView.height > ( scrollTop + 1/2 * windowHeight) )
-							this.emit('viewing', picView), this.picInView = picView
-					}.bind(this))
-				}.bind(this))
-			}.bind(this))
-			this.on('viewing', function(){
+				$(window).on('scroll', this.updatePicInView)
 
-			})
-			tstampLog('PicsView instance DONE init\'ing')
+			}.bind(this))
+			this.on('viewing', function(picView){
+				//console.log("viewing")
+				if(!this.ImageData) return
+				//console.log(this.ImageData.getLocationFor(picView.model))
+			}.bind(this))
+		},
+		updatePicInView: function(){
+			var scrollTop = $(window).scrollTop()
+			_.each(this.picViews, function(picView){
+				if(picView.topOffset == -1) picView.updateOffset()
+				if(picView.topOffset < ( scrollTop + 1/2 * this.windowHeight) &&
+				       picView.topOffset + picView.height > ( scrollTop + 1/2 * this.windowHeight) )
+					this.emit('viewing', picView), this.picInView = picView
+			}.bind(this))
 		},
 
 		eventHash: {},
@@ -91,7 +94,6 @@ $(document).ready(function(){
 			this.height = this.$el.height()
 		},
 		locationChanged: function(e){
-			console.log(this.model)
 			var newLocation = $(e.target).val()
 			ImageData.done(function(ImageData){
 				ImageData.setLocationForPic(this.model, newLocation)
@@ -108,7 +110,6 @@ $(document).ready(function(){
 		initialize: function(options){
 			_.bindAll(this)
 			this.picsView = options.picsView
-			this.picsView.on('viewing', this.renderRoute)
 			this.$el.attr('style','height:100%')
 			this.generateLocationFeatures()
 			this.svg = svg = d3.select(this.$el.append('<svg></svg>').find('svg').get(0))
@@ -138,6 +139,9 @@ $(document).ready(function(){
 					}
 				}.bind(this))
 				this.generateLocationFeatures().done(this.renderRoute)
+			}.bind(this))
+			this.picsView.on('viewing', function(){
+				this.renderRoute()
 			}.bind(this))
 			this.render()
 			$(window).on('resize', _.throttle(this.render, 300))
@@ -195,53 +199,40 @@ $(document).ready(function(){
 			}.bind(this))
 		},
 		renderRoute: function(force){
+			//ex: { "type": "Point", "coordinates": [100.0, 0.0] }
+			if(!this.ImageData || !this.picsView.picInView.model || !this.path) return 
+
 			if(!force && this.oldPicInView == this.picsView.picInView) return
 			this.oldPicInView = this.picsView.picInView
-			//ex: { "type": "Point", "coordinates": [100.0, 0.0] }
-			if(!this.ImageData || !this.picsView.picInView.model) return 
+
 			var viewedLocation = this.ImageData.getLocationFor(this.picsView.picInView.model)
 			if(!viewedLocation) return
 			var viewedCoords = viewedLocation.coordinates
-			console.log("Rendering locations:", this.locations)
-			var travelRoutePlaces = { "type": "FeatureCollection", "features": 
-				_.dropRightWhile(this.locations.features, function(feature){
-					return feature.geometry.coordinates != viewedCoords
-				})
-			}
-			var travelRouteLine = { "type": "FeatureCollection", "features": [
-				{ "type": "Feature",
-						"geometry": {"type": "LineString", "coordinates": 
-							_.map(travelRoutePlaces.features, function(feature){
-								return feature.geometry.coordinates
-							})
-						 },
-				}
-			]}
-			var travelRouteCurrentPlace = { "type": "FeatureCollection", "features": [
-				_.last(travelRoutePlaces.features)
-			]}
+			
+			//console.log("RenderRoute:")
+			//console.log((new Error()).stack)
+			var featureCollections = SVGDrawingUtil.getFeatureCollections(this.locations.features, viewedCoords)
+			
 			//_.takeWhile(array
 
 			var svg = this.svg
 			var path = this.path
 			path.pointRadius(4.5)
 			svg.select("path.city")
-			  .datum(travelRoutePlaces)
+			  .datum(featureCollections.travelRoutePlaces)
 			  .attr("d", path)
 
 			path.pointRadius(7)
-			console.log("Rendering current-place:", travelRouteCurrentPlace)
 			svg.select("path.current-place")
-			  .datum(travelRouteCurrentPlace)
+			  .datum(featureCollections.travelRouteCurrentPlace)
 			  .attr("d", path)
 			
 
 			if(this.locations.features.length >= 2){
 				svg.select("path.travel-route")
-				  .datum(travelRouteLine)
+				  .datum(featureCollections.travelRouteLine)
 				  .attr("d", path)
 			}
-
 
 		}
 	})

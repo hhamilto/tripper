@@ -66,3 +66,33 @@ ImageData = (function(){
 	ImageDataDfd = $.Deferred()
 	return ImageDataDfd
 })()
+
+
+SVGDrawingUtil = (function(){
+	return {
+		getFeatureCollections: function(features,viewedCoords){
+			var travelRoutePlaces = { "type": "FeatureCollection", "features": 
+				_.dropRightWhile(features, function(feature){
+					return feature.geometry.coordinates != viewedCoords
+				})
+			}
+			var travelRouteLine = { "type": "FeatureCollection", "features": [
+				{ "type": "Feature",
+						"geometry": {"type": "LineString", "coordinates": 
+							_.map(travelRoutePlaces.features, function(feature){
+								return feature.geometry.coordinates
+							})
+						 },
+				}
+			]}
+			var travelRouteCurrentPlace = { "type": "FeatureCollection", "features": [
+				_.last(travelRoutePlaces.features)
+			]}
+			return {
+				travelRoutePlaces:travelRoutePlaces,
+				travelRouteLine: travelRouteLine,
+				travelRouteCurrentPlace: travelRouteCurrentPlace
+			}
+		}
+	}
+})()
