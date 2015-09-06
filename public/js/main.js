@@ -209,11 +209,8 @@ $(document).ready(function(){
 			if(!viewedLocation) return
 			var viewedCoords = viewedLocation.coordinates
 			
-			//console.log("RenderRoute:")
-			//console.log((new Error()).stack)
 			var featureCollections = SVGDrawingUtil.getFeatureCollections(this.locations.features, viewedCoords)
-			
-			//_.takeWhile(array
+
 
 			var svg = this.svg
 			var path = this.path
@@ -249,6 +246,7 @@ $(document).ready(function(){
 		$('#js-map').children().detach()
 		$('#js-map').append(mapView.el)
 		mapView.render()
+		setTimeout(picsView.updatePicInView,10)
 	})
 	Backbone.history.start()
 	appRouter.navigate('/', {trigger: true})
