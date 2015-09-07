@@ -16,12 +16,11 @@ $(document).ready(function(){
 		template: _.template($('#pics-list-template').html()),
 		initialize: function(){
 			_.bindAll(this)
-			var picInfos
 			this.$el.attr('id','js-pic-list')
+		},
+		render: function(){
 			ImageData.done(function(ImageData){
-				this.ImageData = ImageData
 				var picInfos = ImageData.getPicInfos()
-
 
 				// throw them all in this thing, 
 				//so that they all render at once, instead of repainting, etc between every one.
@@ -32,7 +31,6 @@ $(document).ready(function(){
 					return picView
 				}.bind(this))
 				this.$el.append(shadowContainer)
-				this.lasPicInView = null
 				this.picInView = this.picViews[0]
 
 				this.windowHeight = $(window).height()
@@ -40,12 +38,6 @@ $(document).ready(function(){
 					this.windowHeight = $(window).height()
 				}, 300))
 				$(window).on('scroll', this.updatePicInView)
-
-			}.bind(this))
-			this.on('viewing', function(picView){
-				//console.log("viewing")
-				if(!this.ImageData) return
-				//console.log(this.ImageData.getLocationFor(picView.model))
 			}.bind(this))
 		},
 		updatePicInView: function(){
@@ -101,10 +93,6 @@ $(document).ready(function(){
 		},
 	})
 
-
-
-
-
 	var MapView = Backbone.View.extend({
 		template: _.template($('#map-template').html()),
 		initialize: function(options){
@@ -112,18 +100,9 @@ $(document).ready(function(){
 			this.picsView = options.picsView
 			this.$el.attr('style','height:100%')
 			this.generateLocationFeatures()
-			this.svg = svg = d3.select(this.$el.append('<svg></svg>').find('svg').get(0))
+			this.$el.html(this.template())
 
-			svg.append("path")
-			  .attr("class", "borders land")
-			svg.append("path")
-			  .attr("class", "borders states")
-			svg.append("path")
-			  .attr("class", "travel-route")
-			svg.append("path")
-			  .attr("class", "city")
-			svg.append("path")
-			  .attr("class", "current-place")
+			this.svg = svg = d3.select(this.$el.find('svg').get(0))
 			
 			ImageData.done(function(ImageData){
 				this.ImageData = ImageData
@@ -165,6 +144,7 @@ $(document).ready(function(){
 			requested: false
 		},
 		render: function(force){
+			console.log('hello')
 			if(this.renderFlowControl.inProgress){
 				this.renderFlowControl.requested = true
 				return
@@ -200,7 +180,7 @@ $(document).ready(function(){
 		},
 		renderRoute: function(force){
 			//ex: { "type": "Point", "coordinates": [100.0, 0.0] }
-			if(!this.ImageData || !this.picsView.picInView.model || !this.path) return 
+			if(!this.ImageData || !this.picsView.picInView || !this.picsView.picInView.model || !this.path) return 
 
 			if(!force && this.oldPicInView == this.picsView.picInView) return
 			this.oldPicInView = this.picsView.picInView
@@ -245,6 +225,7 @@ $(document).ready(function(){
 		$('#js-pics').append(picsView.el)
 		$('#js-map').children().detach()
 		$('#js-map').append(mapView.el)
+		picsView.render()
 		mapView.render()
 		setTimeout(picsView.updatePicInView,10)
 	})
