@@ -41,21 +41,9 @@ $(document).ready(function(){
 				if(picView.topOffset == -1) picView.updateOffset()
 				if(picView.topOffset < ( scrollTop + 1/2 * this.windowHeight) &&
 				       picView.topOffset + picView.height > ( scrollTop + 1/2 * this.windowHeight) )
-					this.emit('viewing', picView), this.picInView = picView
+					this.trigger('viewing', picView), this.picInView = picView
 			}.bind(this))
 		},
-
-		eventHash: {},
-		on: function(event, func){
-			(this.eventHash[event] = this.eventHash[event] || []).push(func)
-		},
-		emit: function(event){
-			var args = Array.prototype.slice.call(arguments, 1)
-			!(this.eventHash[event] = this.eventHash[event] || []).forEach(function(fun){
-				fun.apply(null, args)
-			})
-		}
-
 	})
 
 	var PicView = Backbone.View.extend({
@@ -203,7 +191,6 @@ $(document).ready(function(){
 			svg.select("path.current-place")
 			  .datum(featureCollections.travelRouteCurrentPlace)
 			  .attr("d", path)
-			
 
 			if(this.locations.features.length >= 2){
 				svg.select("path.travel-route")
@@ -213,8 +200,6 @@ $(document).ready(function(){
 
 		}
 	})
-
-
 
 	var picsView = new PicsView
 	var mapView = new MapView({picsView:picsView})
