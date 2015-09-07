@@ -106,7 +106,6 @@ $(document).ready(function(){
 			this.picsView.on('viewing', function(){
 				this.renderRoute()
 			}.bind(this))
-			this.render()
 			$(window).on('resize', _.throttle(this.render, 300))
 		},
 		generateLocationFeatures: function(){
