@@ -5,12 +5,7 @@ usDfd = $.ajax({
 	dataType: 'json'
 })
 
-tstampLog = function(arg){
-	console.log('['+Date.now()+'] ' + arg)
-}
-
 $(document).ready(function(){
-	//lets group dom mods into one thing
 
 	var PicsView = Backbone.View.extend({
 		template: _.template($('#pics-list-template').html()),
@@ -97,6 +92,7 @@ $(document).ready(function(){
 		template: _.template($('#map-template').html()),
 		initialize: function(options){
 			_.bindAll(this)
+			this.renderFlowControl.render = this.render
 			this.picsView = options.picsView
 			this.$el.attr('style','height:100%')
 			this.generateLocationFeatures()
@@ -140,17 +136,27 @@ $(document).ready(function(){
 								
 		},
 		renderFlowControl: {
+			render: null,
 			inProgress: false,
-			requested: false
+			requested: false,
+			requestEntrance: function(){
+				if(this.inProgress){
+					this.requested = true
+					return false
+				}
+				return true
+			},
+			exit: function(){
+				this.inProgress = false
+				if(this.requested){
+					this.render()
+				}
+			}
 		},
 		render: function(force){
 			console.log('hello')
-			if(this.renderFlowControl.inProgress){
-				this.renderFlowControl.requested = true
-				return
-			}
+			if(!this.renderFlowControl.requestEntrance()) return
 			//do we have to rerender
-
 			this.renderFlowControl.inProgress = true
 			this.renderFlowControl.requested = false
 			var width=this.$el.width(), height = this.$el.height()
@@ -169,13 +175,8 @@ $(document).ready(function(){
 				svg.select("path.states")
 				  .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b }))
 				  .attr("d", path)
-
 				this.renderRoute(true)
-
-				this.renderFlowControl.inProgress = false
-				if(this.renderFlowControl.requested){
-					this.render()
-				}
+				this.renderFlowControl.exit()
 			}.bind(this))
 		},
 		renderRoute: function(force){
@@ -190,7 +191,6 @@ $(document).ready(function(){
 			var viewedCoords = viewedLocation.coordinates
 			
 			var featureCollections = SVGDrawingUtil.getFeatureCollections(this.locations.features, viewedCoords)
-
 
 			var svg = this.svg
 			var path = this.path
@@ -231,21 +231,4 @@ $(document).ready(function(){
 	})
 	Backbone.history.start()
 	appRouter.navigate('/', {trigger: true})
-	// Instantiate the router
-	/*
-		var navView = new NavigatorView({model:tables})
-		$('body').prepend(navView.el)
-		var $appContainer = $('#js-app-container')
-		_.each(tables, function(table){
-			var tableView = new EntityListView({
-				tableName: table
-			})
-			appRouter.route(table, table, function(){
-				$appContainer.children().detach()
-				$appContainer.append(tableView.el)
-			})
-		})
-		Backbone.history.start()
-		appRouter.navigate(tables[3], {trigger: true})
-	})*/
 })
