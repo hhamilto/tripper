@@ -184,33 +184,35 @@ $(document).ready(function(){
 
 			var viewedLocation = this.ImageData.getLocationFor(this.picsView.picInView.model)
 			if(!viewedLocation) return
+
 			var viewedCoords = viewedLocation.coordinates
-
-			var featureCollections = SVGDrawingUtil.getFeatureCollections(this.locations.features, viewedCoords)
+			var features = SVGDrawingUtil.getViewedFeatures(this.locations.features, viewedCoords)
+			var featureCollections = SVGDrawingUtil.getFeatureCollections(features)
 			if(featureCollections.travelRoutePlaces.features.length == 0) return
-
 
 			this.path.pointRadius(4.5)
 			this.svg.select("path.city")
 			  .datum(featureCollections.travelRoutePlaces)
 			  .attr("d", this.path)
-			
+
 			this.path.pointRadius(7)
 			this.svg.select("path.current-place")
 			  .datum(featureCollections.travelRouteCurrentPlace)
 			  .attr("d", this.path)
+			this.updateRouteLineKey = Math.random()//use in case we scroll quickly and don't get the route callback in the order we request them
+			SVGDrawingUtil.updateRouteLine(features, this.updateRouteLine, this.updateRouteLineKey)
+		},
+		updateRouteLine: function(key, featureCollection){
+			if(this.updateRouteLineKey != key) return
 
-			if(this.locations.features.length >= 2){
-				this.svg.select("path.travel-route")
-				  .datum(featureCollections.travelRouteLine)
-				  .attr("d", this.path)
-			}
-
+			this.svg.select("path.travel-route")
+			  .datum(featureCollection)
+			  .attr("d", this.path)
 		}
 	})
 
 	var picsView = new PicsView
-	var mapView = new MapView({picsView:picsView})
+	 mapView = new MapView({picsView:picsView})
 
 	var appRouter = new Backbone.Router
 	appRouter.route('/*', '/', function(){

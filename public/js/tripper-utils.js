@@ -57,13 +57,38 @@ ImageData = (function(){
 
 
 SVGDrawingUtil = (function(){
+	var distance = function(p1,p2){
+		//2d distance
+		var d1 = p1[0]-p2[0]
+		var d2 = p1[1]-p2[1]
+		return Math.sqrt(d1*d1+d2*d2)
+	}
+
+	var getDirections = _.memoize(function(queryString){
+		return $.ajax({
+			url: '/directions/',
+			data: {
+				queryStringForDirections: queryString},
+			method: 'GET',
+			dataType: 'json'
+		}).then(function(directions){
+			var routePoints = polyline.decode(directions.routes[0].overview_polyline.points)
+			routePoints = _.reduce(routePoints, function(routePoints, routePoint){
+				if(distance(_.last(routePoints),routePoint) > .4)
+					routePoints.push(routePoint)
+				return routePoints 
+			},[_.first(routePoints)])
+			return routePoints
+		})
+	})
 	return {
-		getFeatureCollections: function(features,viewedCoords){
-			var travelRoutePlaces = { "type": "FeatureCollection", "features": 
-				_.dropRightWhile(features, function(feature){
-					return feature.geometry.coordinates != viewedCoords
-				})
-			}
+		getViewedFeatures: function(features, viewedCoords){
+			return _.dropRightWhile(features, function(feature){
+				return feature.geometry.coordinates != viewedCoords
+			})
+		},
+		getFeatureCollections: function(features){
+			var travelRoutePlaces = { "type": "FeatureCollection", "features": features }
 			var travelRouteLine = { "type": "FeatureCollection", "features": [
 				{ "type": "Feature",
 						"geometry": {"type": "LineString", "coordinates": 
@@ -81,6 +106,29 @@ SVGDrawingUtil = (function(){
 				travelRouteLine: travelRouteLine,
 				travelRouteCurrentPlace: travelRouteCurrentPlace
 			}
+		},
+		updateRouteLine: function(features, updateRouteLine, updateRouteLineKey){
+			var coordinates = _.map(features,function(feature){
+				return feature.geometry.coordinates
+			})
+			var startAndEndPairs = _.zip(_.map(_.range(coordinates.length-1), _.propertyOf(coordinates)),
+			                             _.map(_.range(1,coordinates.length), _.propertyOf(coordinates)))
+			var deferreds = _.map(startAndEndPairs, function(coordinatePair){
+				return getDirections('origin='+encodeURIComponent(coordinatePair[0][1]+','+coordinatePair[0][0])
+				       +'&destination='+encodeURIComponent(coordinatePair[1][1]+','+coordinatePair[1][0])).done()
+			})
+			$.when.apply($,deferreds).done(function(){
+				var travelRouteLine = { "type": "FeatureCollection", "features": [
+					{ "type": "Feature",
+							"geometry": {"type": "LineString", "coordinates": 
+								_.map(_.flatten(arguments), function(coordinates){
+									return [coordinates[1],coordinates[0]]
+								})
+							 },
+					}
+				]}
+				updateRouteLine(updateRouteLineKey, travelRouteLine)
+			})
 		}
 	}
 })()

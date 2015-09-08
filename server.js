@@ -1,6 +1,7 @@
 express = require('express')
 bodyParser = require('body-parser')
 _ = require('lodash')
+request = require('request')
 
 util = require('util')
 fs = require('fs')
@@ -44,6 +45,11 @@ app.put('/pics/:id/location', function(req,res){
 	pic.location = req.body
 	fs.writeFile('./picData.json', JSON.stringify(picData))
 	res.sendStatus(200)
+})
+
+app.get('/directions', function(req,res){
+	var queryForDirections  = req.query.queryStringForDirections
+	request('https://maps.googleapis.com/maps/api/directions/json?'+queryForDirections).pipe(res)
 })
 
 
