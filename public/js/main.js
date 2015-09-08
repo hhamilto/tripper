@@ -5,6 +5,7 @@ usDfd = $.ajax({
 	dataType: 'json'
 })
 
+
 $(document).ready(function(){
 
 	var PicsView = Backbone.View.extend({
@@ -12,23 +13,29 @@ $(document).ready(function(){
 		initialize: function(){
 			_.bindAll(this)
 			this.$el.attr('id','js-pic-list')
+			var idCounter = 0
+
 		},
 		render: function(){
 			ImageData.done(function(ImageData){
 				var picInfos = ImageData.getPicInfos()
-
 				// throw them all in this thing, 
 				//so that they all render at once, instead of repainting, etc between every one.
 				var shadowContainer = $('<div></div>') 
+				var latch = Latch(picInfos.length+1, function(){
+					this.updatePicInView()
+				}.bind(this))
+				var picviewsAttached = $.Deferred()
 				this.picViews = _.map(picInfos, function(picInfo){
-					var picView = new PicView({model:picInfo})
+					var picView = new PicView({model:picInfo,attached:picviewsAttached})
 					picView.$el.appendTo(shadowContainer)
+					picView.loaded.done(latch)
 					return picView
 				}.bind(this))
 				this.$el.append(shadowContainer)
-				this.picInView = this.picViews[0]
+				picviewsAttached.resolve()
+				latch()//we need the _.map to finish, in the case where the pic views are all loaded
 
-				this.windowHeight = $(window).height()
 				$(window).on('resize', _.throttle(function(){
 					this.windowHeight = $(window).height()
 				}, 300))
@@ -36,12 +43,13 @@ $(document).ready(function(){
 			}.bind(this))
 		},
 		updatePicInView: function(){
+			if(!this.windowHeight) this.windowHeight = $(window).height()
 			var scrollTop = $(window).scrollTop()
 			_.each(this.picViews, function(picView){
 				if(picView.topOffset == -1) picView.updateOffset()
 				if(picView.topOffset < ( scrollTop + 1/2 * this.windowHeight) &&
 				       picView.topOffset + picView.height > ( scrollTop + 1/2 * this.windowHeight) )
-					this.trigger('viewing', picView), this.picInView = picView
+					 this.picInView = picView, this.trigger('viewing', picView)
 			}.bind(this))
 		},
 	})
@@ -56,13 +64,15 @@ $(document).ready(function(){
 		initialize: function(options){
 			_.bindAll(this)
 			this.$el.html(this.template(this.model))
-			this.$el.attr('id', this.model.id)		
-		},
-		select: function(){
-			this.$el.attr('style','width:100%; background-color:red')
-		},
-		unselect: function(){
-			this.$el.attr('style','')
+			this.attached = options.attached
+			this.loaded = $.Deferred()
+			var $img = this.$el.find('img')
+			if( $img.get(0).complete )
+				this.loaded.resolve()
+			else
+				$img.on('load', this.loaded.resolve)
+			$.when(this.loaded,this.attached).done(this.updateOffset)
+			this.$el.attr('id', this.model.id)
 		},
 		updateOffset: function(){
 			this.topOffset = this.$el.offset().top
@@ -104,6 +114,7 @@ $(document).ready(function(){
 				this.generateLocationFeatures().done(this.renderRoute)
 			}.bind(this))
 			this.picsView.on('viewing', function(){
+
 				this.renderRoute()
 			}.bind(this))
 			$(window).on('resize', _.throttle(this.render, 300))
@@ -141,7 +152,6 @@ $(document).ready(function(){
 			}
 		},
 		render: function(force){
-			console.log('hello')
 			if(!this.renderFlowControl.requestEntrance()) return
 			//do we have to rerender
 			this.renderFlowControl.inProgress = true
@@ -167,7 +177,6 @@ $(document).ready(function(){
 			}.bind(this))
 		},
 		renderRoute: function(force){
-			//ex: { "type": "Point", "coordinates": [100.0, 0.0] }
 			if(!this.ImageData || !this.picsView.picInView || !this.picsView.picInView.model || !this.path) return 
 
 			if(!force && this.oldPicInView == this.picsView.picInView) return
@@ -176,25 +185,25 @@ $(document).ready(function(){
 			var viewedLocation = this.ImageData.getLocationFor(this.picsView.picInView.model)
 			if(!viewedLocation) return
 			var viewedCoords = viewedLocation.coordinates
-			
+
 			var featureCollections = SVGDrawingUtil.getFeatureCollections(this.locations.features, viewedCoords)
+			if(featureCollections.travelRoutePlaces.features.length == 0) return
 
-			var svg = this.svg
-			var path = this.path
-			path.pointRadius(4.5)
-			svg.select("path.city")
+
+			this.path.pointRadius(4.5)
+			this.svg.select("path.city")
 			  .datum(featureCollections.travelRoutePlaces)
-			  .attr("d", path)
-
-			path.pointRadius(7)
-			svg.select("path.current-place")
+			  .attr("d", this.path)
+			
+			this.path.pointRadius(7)
+			this.svg.select("path.current-place")
 			  .datum(featureCollections.travelRouteCurrentPlace)
-			  .attr("d", path)
+			  .attr("d", this.path)
 
 			if(this.locations.features.length >= 2){
-				svg.select("path.travel-route")
+				this.svg.select("path.travel-route")
 				  .datum(featureCollections.travelRouteLine)
-				  .attr("d", path)
+				  .attr("d", this.path)
 			}
 
 		}
@@ -211,7 +220,6 @@ $(document).ready(function(){
 		$('#js-map').append(mapView.el)
 		picsView.render()
 		mapView.render()
-		setTimeout(picsView.updatePicInView,10)
 	})
 	Backbone.history.start()
 	appRouter.navigate('/', {trigger: true})

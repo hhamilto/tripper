@@ -37,7 +37,7 @@ ImageData = (function(){
 						data: JSON.stringify(newLocation)
 					})
 					model.location = newLocation
-					this.emit('locationUpdated', model)
+					this.trigger('locationUpdated', model)
 				} else {
 					'ZERO_RESULTS' != status && alert('Geocode was not successful for the following reason: ' + status);
 				}
@@ -49,7 +49,7 @@ ImageData = (function(){
 				if(model.location) return model.location
 		}
 	}
-	
+
 	_.extend(ImageData, Backbone.Events)
 	ImageDataDfd = $.Deferred()
 	return ImageDataDfd
@@ -84,3 +84,10 @@ SVGDrawingUtil = (function(){
 		}
 	}
 })()
+
+
+var Latch = function(i,done){
+	return function(){
+		if(!--i) done()
+	}
+}
