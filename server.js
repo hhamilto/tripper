@@ -42,14 +42,17 @@ app.get('/pics', function(req,res){
 
 
 
-
-
 requestDirections = function(queryString, callback){
 	request('https://maps.googleapis.com/maps/api/directions/json?'+queryString, function(err, response, body){
 		var directions = JSON.parse(body) //yolo the err
-		callback(directions)
+		if(directions.status== 'OK')
+			callback(directions)
+		else
+			requestDirectionsThrottled(queryString).done(callback)
 	})
 }
+
+//that stupid limit is NOT 10 per second. 
 timeSpacer = 100
 nextAvailableRequestTime = 0
 requestDirectionsThrottled = function(queryString){
@@ -57,7 +60,7 @@ requestDirectionsThrottled = function(queryString){
 	if(nextAvailableRequestTime<Date.now()){
 		nextAvailableRequestTime = Date.now()+timeSpacer
 		requestDirections(queryString, dfd.resolve)
-	}else{
+	} else {
 		nextAvailableRequestTime = nextAvailableRequestTime+timeSpacer//let em pile up
 		setTimeout(function(){
 			requestDirections(queryString, dfd.resolve)

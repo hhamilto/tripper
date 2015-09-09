@@ -75,7 +75,7 @@ SVGDrawingUtil = (function(){
 			console.log(directions)
 			var routePoints = polyline.decode(directions.routes[0].overview_polyline.points)
 			routePoints = _.reduce(routePoints, function(routePoints, routePoint){
-				if(distance(_.last(routePoints),routePoint) > .4)
+				if(distance(_.last(routePoints),routePoint) > .3)
 					routePoints.push(routePoint)
 				return routePoints 
 			},[_.first(routePoints)])
