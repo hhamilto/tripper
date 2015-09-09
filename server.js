@@ -2,6 +2,7 @@ express = require('express')
 bodyParser = require('body-parser')
 _ = require('lodash')
 request = require('request')
+deferred = require('deferred')
 
 util = require('util')
 fs = require('fs')
@@ -40,16 +41,42 @@ app.get('/pics', function(req,res){
 })
 
 
-app.put('/pics/:id/location', function(req,res){
-	var pic = getPicById(req.params.id)
-	pic.location = req.body
-	fs.writeFile('./picData.json', JSON.stringify(picData))
-	res.sendStatus(200)
-})
+
+
+
+requestDirections = function(queryString, callback){
+	request('https://maps.googleapis.com/maps/api/directions/json?'+queryString, function(err, response, body){
+		var directions = JSON.parse(body) //yolo the err
+		callback(directions)
+	})
+}
+timeSpacer = 100
+nextAvailableRequestTime = 0
+requestDirectionsThrottled = function(queryString){
+	var dfd = deferred()
+	if(nextAvailableRequestTime<Date.now()){
+		nextAvailableRequestTime = Date.now()+timeSpacer
+		requestDirections(queryString, dfd.resolve)
+	}else{
+		nextAvailableRequestTime = nextAvailableRequestTime+timeSpacer//let em pile up
+		setTimeout(function(){
+			requestDirections(queryString, dfd.resolve)
+		}, nextAvailableRequestTime-Date.now())
+	}
+	return dfd.promise
+}
+
+directionCache = {}
+requestDirectionsMemod = function(queryString){
+	if(directionCache[queryString]) return directionCache[queryString]
+	directionCache[queryString] = requestDirectionsThrottled(queryString)
+	return directionCache[queryString]
+}
 
 app.get('/directions', function(req,res){
-	var queryForDirections  = req.query.queryStringForDirections
-	request('https://maps.googleapis.com/maps/api/directions/json?'+queryForDirections).pipe(res)
+	requestDirectionsMemod(req.query.queryStringForDirections).done(function(directions){
+		res.send(JSON.stringify(directions))
+	})
 })
 
 
