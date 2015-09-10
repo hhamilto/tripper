@@ -17,6 +17,15 @@ ImageData = (function(){
 		setLocationForPic: _.throttle(function(model, locationString){
 			var localModel = _.find(pics, {id:model.id})//lets make sure we are using ours.
 			if(localModel != model ) alert("I am complaining about a problem. Look at the code.")
+			if(locationString == ''){
+				//user wants to clear out a location
+				delete model.location
+				$.ajax({
+					url: 'pics/'+model.id+'/location',
+					method: 'DELETE'
+				})
+				this.trigger('locationUpdated', model)
+			}
 			$.ajax({
 				url: "https://maps.googleapis.com/maps/api/geocode/json?address=" + encodeURIComponent(locationString),
 				method: 'GET',

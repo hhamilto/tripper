@@ -70,23 +70,23 @@ body {
 	font-size: 25px;
 	padding: 0;
 	margin: 0;
-	background: none;
-	border: none;
 	position: relative;
 	width:100%;
 	left: 0;
 	right: 0;
 	text-align: center;
-	box-shadow: none;
 }
 
 
 .picture-view form input[disabled]{
 	cursor: default;
+	box-shadow: none;
+	border: none;
+	background: none;
 }
 
 .picture-view form button {
-	width: 70px;
+	width: 40px;
 	position: absolute;
 	bottom: 0px;
 	right: 0px;

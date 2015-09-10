@@ -48,22 +48,25 @@ requestDirections = function(queryString, callback){
 		if(directions.status== 'OK')
 			callback(directions)
 		else
-			requestDirectionsThrottled(queryString).done(callback)
+			console.log(directions.status), requestDirectionsThrottled(queryString).done(callback)
 	})
 }
 
 //that stupid limit is NOT 10 per second. 
 timeSpacer = 100
 nextAvailableRequestTime = 0
-requestDirectionsThrottled = function(queryString){
+requestDirectionsThrottled = function(queryString, tryNumber){
 	var dfd = deferred()
 	if(nextAvailableRequestTime<Date.now()){
+
+		console.log("Requesting now")
 		nextAvailableRequestTime = Date.now()+timeSpacer
-		requestDirections(queryString, dfd.resolve)
+		requestDirections(queryString, dfd.resolve, tryNumber)
 	} else {
+		console.log("Waiting")
 		nextAvailableRequestTime = nextAvailableRequestTime+timeSpacer//let em pile up
 		setTimeout(function(){
-			requestDirections(queryString, dfd.resolve)
+			requestDirections(queryString, dfd.resolve, tryNumber)
 		}, nextAvailableRequestTime-Date.now())
 	}
 	return dfd.promise
@@ -71,15 +74,33 @@ requestDirectionsThrottled = function(queryString){
 
 directionCache = {}
 requestDirectionsMemod = function(queryString){
+	console.log("gotit2")
 	if(directionCache[queryString]) return directionCache[queryString]
-	directionCache[queryString] = requestDirectionsThrottled(queryString)
+	console.log("foo")
+	directionCache[queryString] = requestDirectionsThrottled(queryString, 0)
 	return directionCache[queryString]
 }
 
 app.get('/directions', function(req,res){
+	console.log("gotit")
 	requestDirectionsMemod(req.query.queryStringForDirections).done(function(directions){
+		console.log('sentit')
 		res.send(JSON.stringify(directions))
 	})
+})
+
+app.put('/pics/:id/location', function(req,res){
+	var pic = getPicById(req.params.id)
+	pic.location = req.body
+	fs.writeFile('./picData.json', JSON.stringify(picData))
+	res.sendStatus(200)
+})
+
+app['delete']('/pics/:id/location', function(req,res){
+	var pic = getPicById(req.params.id)
+	delete pic.location
+	fs.writeFile('./picData.json', JSON.stringify(picData))
+	res.sendStatus(200)
 })
 
 

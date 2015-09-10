@@ -21,7 +21,7 @@ $(document).ready(function(){
 		},
 		render: function(){
 			if(this.picViews){
-				_.each(this.picViews, function(picview){
+				_.each(this.picViews, function(picView){
 					picView.render()
 				})
 				return
@@ -69,12 +69,15 @@ $(document).ready(function(){
 			'class':'picture-view'
 		},
 		events: {
-			'input input': 'locationChanged'
+			'click button': 'toggleEditMode',
 		},
 		height: -1,
 		topOffset: -1,
+		editingLocation: false,
+		beingViewed: false,
 		initialize: function(options){
 			_.bindAll(this)
+			this.$el.html(this.template(this.model))
 			this.render()
 			this.attached = options.attached
 			this.pictureListView = options.pictureListView
@@ -99,9 +102,21 @@ $(document).ready(function(){
 			}.bind(this))
 			$(window).on('resize', _.throttle(this.updateOffset, 300))
 		},
-		beingViewed: false,
+		toggleEditMode: function(e){
+			e.preventDefault()
+			this.editingLocation = !this.editingLocation
+			if(this.editingLocation){
+				this.$el.find('button span.glyphicon').attr('class','glyphicon glyphicon-ok')
+				this.$el.find('button').attr('class','btn btn-primary')
+				this.$el.find('input').removeAttr('disabled')
+			}else{
+				this.$el.find('button span.glyphicon').attr('class','glyphicon glyphicon-pencil')
+				this.$el.find('button').attr('class','btn btn-default')
+				this.$el.find('input').attr('disabled','')
+				this.locationChanged(this.$el.find('input').val())
+			}
+		},
 		render: function(){
-			this.$el.html(this.template(this.model))
 			ImageData.done(function(ImageData){
 				this.$el.find('.js-location').val(ImageData.getLocationFor(this.model).text)
 			}.bind(this))
@@ -110,8 +125,7 @@ $(document).ready(function(){
 			this.topOffset = this.$el.offset().top
 			this.height = this.$el.height()
 		},
-		locationChanged: function(e){
-			var newLocation = $(e.target).val()
+		locationChanged: function(newLocation){
 			ImageData.done(function(ImageData){
 				ImageData.setLocationForPic(this.model, newLocation)
 			}.bind(this))		
@@ -136,7 +150,8 @@ $(document).ready(function(){
 					var locationFeature = _.find(this.locations.features, function(feature){
 						return feature.properties.id == model.id
 					})
-					if(!locationFeature){
+					if(!locationFeature || !model.location){
+						// if we don't already have the location feature or we are deleting it.
 						this.generateLocationFeatures().done(_.partial(this.renderRoute,true))
 					}else{
 						locationFeature.geometry.coordinates = model.location.coordinates
