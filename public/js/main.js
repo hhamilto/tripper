@@ -36,7 +36,7 @@ $(document).ready(function(){
 				}.bind(this))
 				var picviewsAttached = $.Deferred()
 				this.picViews = _.map(picInfos, function(picInfo){
-					var picView = new PicView({model:picInfo,attached:picviewsAttached})
+					var picView = new PicView({model:picInfo,attached:picviewsAttached,pictureListView:this})
 					picView.$el.appendTo(shadowContainer)
 					picView.loaded.done(latch)
 					return picView
@@ -77,6 +77,7 @@ $(document).ready(function(){
 			_.bindAll(this)
 			this.render()
 			this.attached = options.attached
+			this.pictureListView = options.pictureListView
 			this.loaded = $.Deferred()
 			var $img = this.$el.find('img')
 			if( $img.get(0).complete )
@@ -85,7 +86,20 @@ $(document).ready(function(){
 				$img.on('load', this.loaded.resolve)
 			$.when(this.loaded,this.attached).done(this.updateOffset)
 			this.$el.attr('id', this.model.id)
+			this.pictureListView.on('viewing', function(picView){
+				if(picView == this){
+					this.beingViewed = true
+					this.$el.addClass('being-viewed')
+				}else{
+					if(this.beingViewed){
+						this.beingViewed = false
+						this.$el.removeClass('being-viewed')
+					}
+				}
+			}.bind(this))
+			$(window).on('resize', _.throttle(this.updateOffset, 300))
 		},
+		beingViewed: false,
 		render: function(){
 			this.$el.html(this.template(this.model))
 			ImageData.done(function(ImageData){

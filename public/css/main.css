@@ -16,7 +16,31 @@ body {
 	position: relative;
 	left:50%;
 	width: 50%;
-	text-align: center
+	text-align: center;
+	display: flex;
+	-webkit-flex-direction: column;
+	flex-direction: column;
+}
+
+@media(orientation: portrait) { 
+	.pics {
+		left:0;
+		width: 100%;
+		margin-top: 50%;
+	}
+
+	.map {
+		position: fixed;
+		height: 50%;
+		width: 100%;
+		top:0;
+		left:0;
+		right:0;
+		background: white;
+		box-shadow: 0 0 12px 0 rgba(0,0,0,.6);
+
+	}
+
 }
 
 .picture-view {
@@ -25,8 +49,17 @@ body {
 	margin: 50px auto 0 auto;
 	padding: 10px;
 	background-color: #FFF;
+	transition: all 1s ease;
 }
 
+.picture-view.being-viewed {
+	/*margin: 200px auto 0 auto;*/
+}
+
+
+.picture-view img {
+	max-width:100%;
+}
 
 .picture-view form {
 	margin-top: 10px;
