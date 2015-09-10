@@ -8,15 +8,24 @@ usDfd = $.ajax({
 
 $(document).ready(function(){
 
-	var PicsView = Backbone.View.extend({
+	var PictureListView = Backbone.View.extend({
 		template: _.template($('#pics-list-template').html()),
 		initialize: function(){
 			_.bindAll(this)
 			this.$el.attr('id','js-pic-list')
 			var idCounter = 0
 
+			ImageData.done(function(ImageData){
+				ImageData.on('locationUpdated', this.render)
+			}.bind(this))
 		},
 		render: function(){
+			if(this.picViews){
+				_.each(this.picViews, function(picview){
+					picView.render()
+				})
+				return
+			}
 			ImageData.done(function(ImageData){
 				var picInfos = ImageData.getPicInfos()
 				// throw them all in this thing, 
@@ -56,6 +65,9 @@ $(document).ready(function(){
 
 	var PicView = Backbone.View.extend({
 		template: _.template($('#pic-item-template').html()),
+		attributes:{
+			'class':'picture-view'
+		},
 		events: {
 			'input input': 'locationChanged'
 		},
@@ -63,7 +75,7 @@ $(document).ready(function(){
 		topOffset: -1,
 		initialize: function(options){
 			_.bindAll(this)
-			this.$el.html(this.template(this.model))
+			this.render()
 			this.attached = options.attached
 			this.loaded = $.Deferred()
 			var $img = this.$el.find('img')
@@ -73,6 +85,12 @@ $(document).ready(function(){
 				$img.on('load', this.loaded.resolve)
 			$.when(this.loaded,this.attached).done(this.updateOffset)
 			this.$el.attr('id', this.model.id)
+		},
+		render: function(){
+			this.$el.html(this.template(this.model))
+			ImageData.done(function(ImageData){
+				this.$el.find('.js-location').val(ImageData.getLocationFor(this.model).text)
+			}.bind(this))
 		},
 		updateOffset: function(){
 			this.topOffset = this.$el.offset().top
@@ -91,7 +109,7 @@ $(document).ready(function(){
 		initialize: function(options){
 			_.bindAll(this)
 			this.renderFlowControl.render = this.render
-			this.picsView = options.picsView
+			this.pictureListView = options.pictureListView
 			this.$el.attr('style','height:100%')
 			this.generateLocationFeatures()
 			this.$el.html(this.template())
@@ -113,7 +131,7 @@ $(document).ready(function(){
 				}.bind(this))
 				this.generateLocationFeatures().done(this.renderRoute)
 			}.bind(this))
-			this.picsView.on('viewing', function(){
+			this.pictureListView.on('viewing', function(){
 
 				this.renderRoute()
 			}.bind(this))
@@ -177,12 +195,12 @@ $(document).ready(function(){
 			}.bind(this))
 		},
 		renderRoute: function(force){
-			if(!this.ImageData || !this.picsView.picInView || !this.picsView.picInView.model || !this.path) return 
+			if(!this.ImageData || !this.pictureListView.picInView || !this.pictureListView.picInView.model || !this.path) return 
 
-			if(!force && this.oldPicInView == this.picsView.picInView) return
-			this.oldPicInView = this.picsView.picInView
+			if(!force && this.oldPicInView == this.pictureListView.picInView) return
+			this.oldPicInView = this.pictureListView.picInView
 
-			var viewedLocation = this.ImageData.getLocationFor(this.picsView.picInView.model)
+			var viewedLocation = this.ImageData.getLocationFor(this.pictureListView.picInView.model)
 			if(!viewedLocation) return
 
 			var viewedCoords = viewedLocation.coordinates
@@ -211,16 +229,16 @@ $(document).ready(function(){
 		}
 	})
 
-	var picsView = new PicsView
-	 mapView = new MapView({picsView:picsView})
+	var pictureListView = new PictureListView
+	var mapView = new MapView({pictureListView:pictureListView})
 
 	var appRouter = new Backbone.Router
 	appRouter.route('/*', '/', function(){
 		$('#js-pics').children().detach()
-		$('#js-pics').append(picsView.el)
+		$('#js-pics').append(pictureListView.el)
 		$('#js-map').children().detach()
 		$('#js-map').append(mapView.el)
-		picsView.render()
+		pictureListView.render()
 		mapView.render()
 	})
 	Backbone.history.start()
