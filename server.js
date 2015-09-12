@@ -42,13 +42,13 @@ app.get('/pics', function(req,res){
 
 
 
-requestDirections = function(queryString, callback){
+requestDirections = function(queryString, callback, tryNumber){
 	request('https://maps.googleapis.com/maps/api/directions/json?'+queryString, function(err, response, body){
 		var directions = JSON.parse(body) //yolo the err
 		if(directions.status== 'OK')
 			callback(directions)
 		else
-			console.log(directions.status), requestDirectionsThrottled(queryString).done(callback)
+			console.log(directions.status), requestDirectionsThrottled(queryString, tryNumber++).done(callback)
 	})
 }
 
@@ -57,8 +57,11 @@ timeSpacer = 100
 nextAvailableRequestTime = 0
 requestDirectionsThrottled = function(queryString, tryNumber){
 	var dfd = deferred()
+	if(tryNumber > 10){
+		dfd.reject('Exceeded maximum tries')
+		return dfd.promise
+	}
 	if(nextAvailableRequestTime<Date.now()){
-
 		console.log("Requesting now")
 		nextAvailableRequestTime = Date.now()+timeSpacer
 		requestDirections(queryString, dfd.resolve, tryNumber)

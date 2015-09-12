@@ -118,7 +118,8 @@ $(document).ready(function(){
 		},
 		render: function(){
 			ImageData.done(function(ImageData){
-				this.$el.find('.js-location').val(ImageData.getLocationFor(this.model).text)
+				var location = ImageData.getLocationFor(this.model)
+				this.$el.find('.js-location').val(location?location.text:'')
 			}.bind(this))
 		},
 		updateOffset: function(){
