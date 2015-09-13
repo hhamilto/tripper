@@ -3,19 +3,11 @@ bodyParser = require('body-parser')
 _ = require('lodash')
 request = require('request')
 deferred = require('deferred')
+persistence = require('../persistence')
+
 
 util = require('util')
 fs = require('fs')
-
-//would like to put persistence in own module...
-picData = JSON.parse(fs.readFileSync('./picData.json'))
-getPicById = function(id){
-	if(picData[id]){
-		return picData[id]
-	}else{
-		return picData[id] = {}
-	}
-}
 
 app = express()
 
@@ -80,6 +72,7 @@ requestDirectionsMemod = function(queryString){
 }
 
 app.get('/directions', function(req,res){
+	res.sendStatus(500)//lol
 	requestDirectionsMemod(req.query.queryStringForDirections).done(function(directions){
 		res.send(JSON.stringify(directions))
 	})
