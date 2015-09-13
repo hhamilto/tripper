@@ -3,6 +3,6 @@
 		"host"     : "localhost",
 		"user"     : "dba",
 		"password" : "123456",
-		"database" : "HoursManagement"
+		"database" : "Tripper"
 	}
 }

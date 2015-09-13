@@ -44,7 +44,7 @@ createMigrationTableIfNotExist = function(){
 	var dfd = deferred()
 	migrationConn.query('SHOW TABLES', function(err, results) {
 		if (err) throw err
-		if(_.filter(results, {Tables_in_HoursManagement: 'Migrations'}).length == 0){
+		if(_.filter(results, {Tables_in_Tripper: 'Migrations'}).length == 0){
 			migrationConn.query(createMigrationTableSql, function(err, results) {
 				if (err) dfd.reject(err)
 				else dfd.resolve()

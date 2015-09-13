@@ -3,7 +3,7 @@ bodyParser = require('body-parser')
 _ = require('lodash')
 request = require('request')
 deferred = require('deferred')
-persistence = require('../persistence')
+persistence = require('./persistence')
 
 
 util = require('util')
@@ -16,23 +16,10 @@ app.use(bodyParser.text())
 app.use(bodyParser.json())
 
 app.get('/pics', function(req,res){
-	fs.readdir(__dirname + '/public/pics', function(err,files){
-		if(err){
-			res.send(err)
-			res.done()
-		}
-		res.json(_.map(files, function(filename){
-			var picid = filename.replace(/\./g,'')
-			var pic = getPicById(picid)
-			return _.defaults({
-					filename:filename,
-					id: picid
-				}, pic)
-			}))
+	persistence.Pictures.get().done(function(pics){
+		res.json(pics)
 	})
 })
-
-
 
 requestDirections = function(queryString, callback, tryNumber){
 	request('https://maps.googleapis.com/maps/api/directions/json?'+queryString, function(err, response, body){
@@ -79,23 +66,31 @@ app.get('/directions', function(req,res){
 })
 
 app.put('/pics/:id/location', function(req,res){
-	var pic = getPicById(req.params.id)
+	var pic = persistence.Pictures.get({id:req.params.id})
 	pic.location = req.body
-	fs.writeFile('./picData.json', JSON.stringify(picData))
+	//XXX issss broken
 	res.sendStatus(200)
 })
 
 app['delete']('/pics/:id/location', function(req,res){
-	var pic = getPicById(req.params.id)
-	delete pic.location
-	fs.writeFile('./picData.json', JSON.stringify(picData))
+	var pic = persistence.Pictures.delete({id:req.params.id})
+	//XXX issss broken
 	res.sendStatus(200)
 })
 
+app.get('/trips', function(req,res){
+	persistence.Trips.get().done(function(trips){
+		res.json(trips)
+	})
+})
 
 module.exports = {
 	initialize: function(){
-		app.listen(3000)
+		persistence.initialize().done(function(){
+			app.listen(3000)
+		})
+
+
 	}
 }
 

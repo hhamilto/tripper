@@ -1,4 +1,4 @@
-DROP DATABASE HoursManagement;
-CREATE DATABASE HoursManagement;
-USE HoursManagement;
+DROP DATABASE Tripper;
+CREATE DATABASE Tripper;
+USE Tripper;
 

@@ -17,8 +17,27 @@
 
 	</div>
 
-	<script type="text/template" id="index-template">
-		Hai i am an index
+	<script type="text/template" id="trip-list-template">
+		<h1>Trips</h1>
+		<ul class='js-trip-list'>
+		</ul>
+		<a class="btn btn-success" href="#/create-new-trip"><span class="glyphicon-add"></span> Create a New Trip</a>
+	</script>
+
+	<script type="text/template" id="create-trip-template">
+		Import Pictures:
+		<a class="btn btn-default" href="#/create-new-trip/drive">Import From Google Drive </a>
+		<a class="btn btn-default" href="#/create-new-trip/zip">Upload a ZIP archive</a>
+	</script>
+
+	<script type="text/template" id="zip-upload-template">
+		<input type="file" class="js-zip-upload">Choose Zip File ... </input>
+		<progress max="100" value="0"></progress>
+		<button class="btn btn-default js-import-from-drive">Upload </button>
+	</script>
+
+	<script type="text/template" id=#/create-new-trip"trip-list-item-template">
+		<a href="#<%=name%>"><%=name%></a>
 	</script>
 
 	<script type="text/template" id="trip-view-template">

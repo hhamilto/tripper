@@ -30,7 +30,7 @@ module.exports.initialize =function(){
 				dbReady.reject(err)
 				return
 			}
-			var tables = _.without(_.map(rows,'Tables_in_HoursManagement'), 'Migrations')
+			var tables = _.without(_.map(rows,'Tables_in_Tripper'), 'Migrations')
 			deferred.map(tables, function(table){
 				var dfd = deferred()
 				module.exports[table] = {}
