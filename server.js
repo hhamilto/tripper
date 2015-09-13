@@ -58,15 +58,12 @@ nextAvailableRequestTime = 0
 requestDirectionsThrottled = function(queryString, tryNumber){
 	var dfd = deferred()
 	if(tryNumber > 10){
-		dfd.reject('Exceeded maximum tries')
 		return dfd.promise
 	}
 	if(nextAvailableRequestTime<Date.now()){
-		console.log("Requesting now")
 		nextAvailableRequestTime = Date.now()+timeSpacer
 		requestDirections(queryString, dfd.resolve, tryNumber)
 	} else {
-		console.log("Waiting")
 		nextAvailableRequestTime = nextAvailableRequestTime+timeSpacer//let em pile up
 		setTimeout(function(){
 			requestDirections(queryString, dfd.resolve, tryNumber)
@@ -77,17 +74,13 @@ requestDirectionsThrottled = function(queryString, tryNumber){
 
 directionCache = {}
 requestDirectionsMemod = function(queryString){
-	console.log("gotit2")
 	if(directionCache[queryString]) return directionCache[queryString]
-	console.log("foo")
 	directionCache[queryString] = requestDirectionsThrottled(queryString, 0)
 	return directionCache[queryString]
 }
 
 app.get('/directions', function(req,res){
-	console.log("gotit")
 	requestDirectionsMemod(req.query.queryStringForDirections).done(function(directions){
-		console.log('sentit')
 		res.send(JSON.stringify(directions))
 	})
 })

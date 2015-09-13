@@ -20,9 +20,9 @@ $(document).ready(function(){
 			}.bind(this))
 		},
 		render: function(){
-			if(this.picViews){
-				_.each(this.picViews, function(picView){
-					picView.render()
+			if(this.pictureViews){
+				_.each(this.pictureViews, function(pictureView){
+					pictureView.render()
 				})
 				return
 			}
@@ -34,15 +34,15 @@ $(document).ready(function(){
 				var latch = Latch(picInfos.length+1, function(){
 					this.updatePicInView()
 				}.bind(this))
-				var picviewsAttached = $.Deferred()
-				this.picViews = _.map(picInfos, function(picInfo){
-					var picView = new PicView({model:picInfo,attached:picviewsAttached,pictureListView:this})
-					picView.$el.appendTo(shadowContainer)
-					picView.loaded.done(latch)
-					return picView
+				var pictureViewsAttached = $.Deferred()
+				this.pictureViews = _.map(picInfos, function(picInfo){
+					var pictureView = new PictureView({model:picInfo,attached:pictureViewsAttached,pictureListView:this})
+					pictureView.$el.appendTo(shadowContainer)
+					pictureView.loaded.done(latch)
+					return pictureView
 				}.bind(this))
 				this.$el.append(shadowContainer)
-				picviewsAttached.resolve()
+				pictureViewsAttached.resolve()
 				latch()//we need the _.map to finish, in the case where the pic views are all loaded
 
 				$(window).on('resize', _.throttle(function(){
@@ -54,16 +54,16 @@ $(document).ready(function(){
 		updatePicInView: function(){
 			if(!this.windowHeight) this.windowHeight = $(window).height()
 			var scrollTop = $(window).scrollTop()
-			_.each(this.picViews, function(picView){
-				if(picView.topOffset == -1) picView.updateOffset()
-				if(picView.topOffset < ( scrollTop + 1/2 * this.windowHeight) &&
-				       picView.topOffset + picView.height > ( scrollTop + 1/2 * this.windowHeight) )
-					 this.picInView = picView, this.trigger('viewing', picView)
+			_.each(this.pictureViews, function(pictureView){
+				if(pictureView.topOffset == -1) pictureView.updateOffset()
+				if(pictureView.topOffset < ( scrollTop + 1/2 * this.windowHeight) &&
+				       pictureView.topOffset + pictureView.height > ( scrollTop + 1/2 * this.windowHeight) )
+					 this.picInView = pictureView, this.trigger('viewing', pictureView)
 			}.bind(this))
 		},
 	})
 
-	var PicView = Backbone.View.extend({
+	var PictureView = Backbone.View.extend({
 		template: _.template($('#pic-item-template').html()),
 		attributes:{
 			'class':'picture-view'
@@ -89,8 +89,8 @@ $(document).ready(function(){
 				$img.on('load', this.loaded.resolve)
 			$.when(this.loaded,this.attached).done(this.updateOffset)
 			this.$el.attr('id', this.model.id)
-			this.pictureListView.on('viewing', function(picView){
-				if(picView == this){
+			this.pictureListView.on('viewing', function(pictureView){
+				if(pictureView == this){
 					this.beingViewed = true
 					this.$el.addClass('being-viewed')
 				}else{
