@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.13.3",
+    "connect-busboy": "0.0.2",
     "deferred": "^0.7.2",
     "express": "^4.13.3",
     "lodash": "^3.10.1",

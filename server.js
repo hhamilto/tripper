@@ -4,19 +4,24 @@ _ = require('lodash')
 request = require('request')
 deferred = require('deferred')
 persistence = require('./persistence')
+busboy = require('connect-busboy')
 
 
+path = require('path')
 util = require('util')
 fs = require('fs')
 
 app = express()
 
+app.use(busboy())
 app.use(express.static(__dirname + '/public'))
 app.use(bodyParser.text())
 app.use(bodyParser.json())
 
-app.get('/pics', function(req,res){
-	persistence.Pictures.get().done(function(pics){
+app.get('/trip/:tripId/pics', function(req,res){
+	persistence.Pictures.get({
+		tripId: req.params.tripId
+	}).done(function(pics){
 		res.json(pics)
 	})
 })
@@ -65,14 +70,14 @@ app.get('/directions', function(req,res){
 	})
 })
 
-app.put('/pics/:id/location', function(req,res){
+app.put('/trip/:tripId/pics/:id/location', function(req,res){
 	var pic = persistence.Pictures.get({id:req.params.id})
 	pic.location = req.body
 	//XXX issss broken
 	res.sendStatus(200)
 })
 
-app['delete']('/pics/:id/location', function(req,res){
+app['delete']('/trip/:tripId/pics/:id/location', function(req,res){
 	var pic = persistence.Pictures.delete({id:req.params.id})
 	//XXX issss broken
 	res.sendStatus(200)
@@ -82,6 +87,32 @@ app.get('/trips', function(req,res){
 	persistence.Trips.get().done(function(trips){
 		res.json(trips)
 	})
+})
+
+app.put('/trips', function(req,res){
+	persistence.Trips.create(req.body).done(function(tripId){
+		res.json({id:tripId})
+	})
+})
+
+app.put('/trips/:id/photos', function(req,res){
+	if (req.busboy) {
+		req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+			//reject bad mimetypes... XXX
+			var saveTo = path.join(__dirname, 'public','pics',filename)
+			persistence.Pictures.create({
+				filePath: saveTo,
+				tripid: req.params.id
+			}).done(function(id){
+				console.log('picId: '+ id)
+			})
+			file.pipe(fs.createWriteStream(saveTo))
+		})
+		req.busboy.on('finish', function() {
+			res.end()
+		})
+		req.pipe(req.busboy)
+	}
 })
 
 module.exports = {

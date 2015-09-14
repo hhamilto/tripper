@@ -1,9 +1,9 @@
 
 
-ImageData = (function(){
+ImageData = function(id){
 	var pics
 	$.ajax({
-		url:'/pics/',
+		url:'/trip/'+id+'/pics',
 		method: 'GET',
 		dataType: 'json',
 	}).done(function(picsFromServer){
@@ -62,7 +62,7 @@ ImageData = (function(){
 	_.extend(ImageData, Backbone.Events)
 	ImageDataDfd = $.Deferred()
 	return ImageDataDfd
-})()
+}
 
 
 SVGDrawingUtil = (function(){

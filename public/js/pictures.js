@@ -6,9 +6,7 @@ Pictures = (function(){
 		initialize: function(){
 			_.bindAll(this)
 			this.$el.attr('id','js-pic-list')
-			var idCounter = 0
-
-			ImageData.done(function(ImageData){
+			ImageData({options.tripId}).done(function(ImageData){
 				ImageData.on('locationUpdated', this.render)
 			}.bind(this))
 		},

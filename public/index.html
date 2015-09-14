@@ -27,20 +27,24 @@
 	<script type="text/template" id="create-trip-template">
 		Import Pictures:
 		<a class="btn btn-default" href="#/create-new-trip/drive">Import From Google Drive </a>
-		<a class="btn btn-default" href="#/create-new-trip/zip">Upload a ZIP archive</a>
+		<a class="btn btn-default" href="#/create-new-trip/upload">Upload Photos</a>
 	</script>
 
-	<script type="text/template" id="zip-upload-template">
-		<input type="file" class="js-zip-upload">Choose Zip File ... </input>
-		<progress max="100" value="0"></progress>
-		<button class="btn btn-default js-import-from-drive">Upload </button>
+	<script type="text/template" id="photo-upload-template">
+		<form role="form">
+			<input type="text" class="js-name" placeholder="Trip Name...">
+			<input type="file" class="js-upload" multiple>Choose Photos ... </input>
+			<progress max="100" value="0"></progress>
+			<button class="btn btn-default js-upload">Upload </button>
+		</form>
 	</script>
 
-	<script type="text/template" id=#/create-new-trip"trip-list-item-template">
-		<a href="#<%=name%>"><%=name%></a>
+	<script type="text/template" id="trip-list-item-template">
+		<a href="#trips/<%=name%>"><%=name%></a>
 	</script>
 
 	<script type="text/template" id="trip-view-template">
+			<div id="js-pics" class="pics"></div>
 			<div id="js-map" class="map"></div>
 	</script>
 
