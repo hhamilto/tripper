@@ -1,9 +1,10 @@
 
 
 ImageData = function(id){
+	ImageDataDfd = $.Deferred()
 	var pics
 	$.ajax({
-		url:'/trip/'+id+'/pics',
+		url: '/trip/'+id+'/pics',
 		method: 'GET',
 		dataType: 'json',
 	}).done(function(picsFromServer){
@@ -60,7 +61,6 @@ ImageData = function(id){
 	}
 
 	_.extend(ImageData, Backbone.Events)
-	ImageDataDfd = $.Deferred()
 	return ImageDataDfd
 }
 

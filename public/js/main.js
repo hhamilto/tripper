@@ -43,8 +43,11 @@ $(document).ready(function(){
 		template: _.template($('#trip-view-template').html()),
 		initialize: function(){
 			this.$el.html(this.template(this.model))
-			var pictureListView = new Pictures.PictureListView()
-			var mapView = new Pictures.MapView({pictureListView:pictureListView})
+			var pictureListView = new Pictures.PictureListView({tripId:this.tripId})
+			var mapView = new Pictures.MapView({
+				pictureListView:pictureListView,
+				tripId:this.tripId
+			})
 			this.$el.find('js-map').children().detach()
 			this.$el.find('js-map').append(mapView.el)
 			this.$el.find('js-pics').children().detach()
@@ -122,7 +125,10 @@ $(document).ready(function(){
 			"*catchall":                 "trips",
 		},
 		trip: function(tripId) {
-			var tripView = getView('tripView-'+tripId,tripId)//memod on first arg only...
+			//memod on first arg only...
+			var tripView = getView('tripView-'+tripId,{
+				tripId:tripId
+			})
 			$('#app-container').children().detach()
 			$('#app-container').append(tripView.el)
 			tripView.render()

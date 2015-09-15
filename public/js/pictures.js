@@ -3,10 +3,11 @@ Pictures = (function(){
 	
 	var PictureListView = Backbone.View.extend({
 		template: _.template($('#pics-list-template').html()),
-		initialize: function(){
+		initialize: function(options){
 			_.bindAll(this)
+			this.tripId = options.tripId
 			this.$el.attr('id','js-pic-list')
-			ImageData({options.tripId}).done(function(ImageData){
+			ImageData(this.tripId).done(function(ImageData){
 				ImageData.on('locationUpdated', this.render)
 			}.bind(this))
 		},
@@ -17,7 +18,7 @@ Pictures = (function(){
 				})
 				return
 			}
-			ImageData.done(function(ImageData){
+			ImageData(this.tripId).done(function(ImageData){
 				var picInfos = ImageData.getPicInfos()
 				// throw them all in this thing, 
 				//so that they all render at once, instead of repainting, etc between every one.
@@ -27,7 +28,12 @@ Pictures = (function(){
 				}.bind(this))
 				var pictureViewsAttached = $.Deferred()
 				this.pictureViews = _.map(picInfos, function(picInfo){
-					var pictureView = new PictureView({model:picInfo,attached:pictureViewsAttached,pictureListView:this})
+					var pictureView = new PictureView({
+						model:picInfo,
+						attached:pictureViewsAttached,
+						pictureListView:this,
+						tripId: this.tripId
+					})
 					pictureView.$el.appendTo(shadowContainer)
 					pictureView.loaded.done(latch)
 					return pictureView
@@ -70,6 +76,7 @@ Pictures = (function(){
 			_.bindAll(this)
 			this.$el.html(this.template(this.model))
 			this.render()
+			this.tripId = options.tripId
 			this.attached = options.attached
 			this.pictureListView = options.pictureListView
 			this.loaded = $.Deferred()
@@ -108,7 +115,7 @@ Pictures = (function(){
 			}
 		},
 		render: function(){
-			ImageData.done(function(ImageData){
+			ImageData(this.tripId).done(function(ImageData){
 				var location = ImageData.getLocationFor(this.model)
 				this.$el.find('.js-location').val(location?location.text:'')
 			}.bind(this))
@@ -118,7 +125,7 @@ Pictures = (function(){
 			this.height = this.$el.height()
 		},
 		locationChanged: function(newLocation){
-			ImageData.done(function(ImageData){
+			ImageData(this.tripId).done(function(ImageData){
 				ImageData.setLocationForPic(this.model, newLocation)
 			}.bind(this))		
 		},
@@ -128,6 +135,7 @@ Pictures = (function(){
 		template: _.template($('#map-template').html()),
 		initialize: function(options){
 			_.bindAll(this)
+			this.tripId = options.tripId
 			this.renderFlowControl.render = this.render
 			this.pictureListView = options.pictureListView
 			this.$el.attr('style','height:100%')
@@ -136,7 +144,7 @@ Pictures = (function(){
 
 			this.svg = svg = d3.select(this.$el.find('svg').get(0))
 			
-			ImageData.done(function(ImageData){
+			ImageData(this.tripId).done(function(ImageData){
 				this.ImageData = ImageData
 				ImageData.on('locationUpdated', function(model){
 					var locationFeature = _.find(this.locations.features, function(feature){
@@ -160,7 +168,7 @@ Pictures = (function(){
 		},
 		generateLocationFeatures: function(){
 			this.locations = { "type": "FeatureCollection", "features": []}
-			return ImageData.done(function(ImageData){
+			return ImageData(this.tripId).done(function(ImageData){
 				this.locations.features = _.compact(_.map(ImageData.getPicInfos(), function(picInfo){
 					if(!picInfo.location) return
 
