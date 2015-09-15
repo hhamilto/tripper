@@ -101,7 +101,7 @@ app.put('/trips/:id/photos', function(req,res){
 			//reject bad mimetypes... XXX
 			var saveTo = path.join(__dirname, 'public','pics',filename)
 			persistence.Pictures.create({
-				filePath: saveTo,
+				url: 'pics/'+filename,
 				tripid: req.params.id
 			}).done(function(id){
 				console.log('picId: '+ id)

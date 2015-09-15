@@ -40,19 +40,19 @@
 	</script>
 
 	<script type="text/template" id="trip-list-item-template">
-		<a href="#trips/<%=name%>"><%=name%></a>
+		<a href="#trips/<%=id%>"><%=name%></a>
 	</script>
 
 	<script type="text/template" id="trip-view-template">
-			<div id="js-pics" class="pics"></div>
-			<div id="js-map" class="map"></div>
+			<div class="js-pics pics"></div>
+			<div class="js-map map"></div>
 	</script>
 
 	<script type="text/template" id="pics-list-template">
 	</script>
 
 	<script type="text/template" id="pic-item-template">
-		<img src='/pics/<%=filename%>' />
+		<img src='<%=url%>' />
 		<form role="form" class="form-inline">
 			<input class="form-control js-location" name="location" disabled='disabled' type="text" value="<%=typeof location != 'undefined' ?location.text:""%>" />
 			<button class="btn btn-default" ><span class="glyphicon glyphicon-pencil"></span></button>

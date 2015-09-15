@@ -5,7 +5,7 @@ CREATE TABLE Trips (
 
 CREATE TABLE Pictures (
 	id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	filePath varchar(255) NOT NULL,
+	url varchar(255) NOT NULL,
 	locationText varchar(255),
 	latitude DECIMAL(9,6),
 	longitude DECIMAL(9,6),

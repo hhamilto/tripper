@@ -41,17 +41,18 @@ $(document).ready(function(){
 
 	var TripView = Backbone.View.extend({
 		template: _.template($('#trip-view-template').html()),
-		initialize: function(){
+		initialize: function(options){
+			this.tripId = options.tripId
 			this.$el.html(this.template(this.model))
 			var pictureListView = new Pictures.PictureListView({tripId:this.tripId})
 			var mapView = new Pictures.MapView({
 				pictureListView:pictureListView,
 				tripId:this.tripId
 			})
-			this.$el.find('js-map').children().detach()
-			this.$el.find('js-map').append(mapView.el)
-			this.$el.find('js-pics').children().detach()
-			this.$el.find('js-pics').append(pictureListView.el)
+			this.$el.find('.js-map').children().detach()
+			this.$el.find('.js-map').append(mapView.el)
+			this.$el.find('.js-pics').children().detach()
+			this.$el.find('.js-pics').append(pictureListView.el)
 			pictureListView.render()
 			mapView.render()
 		}
@@ -105,11 +106,11 @@ $(document).ready(function(){
 	})
 
 	//lazy view creation
-	getView = _.memoize(function(viewName){
+	getView = _.memoize(function(viewName, arg){
 		if(viewName == 'tripListView')
 			return new TripListView
 		else if (viewName.search('tripView-.*') >-1)
-			return new TripView(Array.prototype.slice.call(arguments,1))
+			return new TripView(arg)
 		else if (viewName == 'createNewTripView')
 			return new CreateNewTripView
 		else if (viewName == 'createNewTripViewFromUpload')

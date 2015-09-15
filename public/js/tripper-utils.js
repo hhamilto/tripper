@@ -1,6 +1,6 @@
 
 
-ImageData = function(id){
+ImageData = _.memoize(function(id){
 	ImageDataDfd = $.Deferred()
 	var pics
 	$.ajax({
@@ -62,7 +62,7 @@ ImageData = function(id){
 
 	_.extend(ImageData, Backbone.Events)
 	return ImageDataDfd
-}
+})
 
 
 SVGDrawingUtil = (function(){

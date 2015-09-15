@@ -74,6 +74,7 @@ Pictures = (function(){
 		beingViewed: false,
 		initialize: function(options){
 			_.bindAll(this)
+			console.log(this.model)
 			this.$el.html(this.template(this.model))
 			this.render()
 			this.tripId = options.tripId
