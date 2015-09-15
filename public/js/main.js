@@ -44,17 +44,19 @@ $(document).ready(function(){
 		initialize: function(options){
 			this.tripId = options.tripId
 			this.$el.html(this.template(this.model))
-			var pictureListView = new Pictures.PictureListView({tripId:this.tripId})
-			var mapView = new Pictures.MapView({
-				pictureListView:pictureListView,
-				tripId:this.tripId
+			this.pictureListView = new Pictures.PictureListView({tripId:this.tripId})
+			this.mapView = new Pictures.MapView({
+				pictureListView: this.pictureListView,
+				tripId: this.tripId
 			})
 			this.$el.find('.js-map').children().detach()
-			this.$el.find('.js-map').append(mapView.el)
+			this.$el.find('.js-map').append(this.mapView.el)
 			this.$el.find('.js-pics').children().detach()
-			this.$el.find('.js-pics').append(pictureListView.el)
-			pictureListView.render()
-			mapView.render()
+			this.$el.find('.js-pics').append(this.pictureListView.el)
+		},
+		render: function(){
+			this.pictureListView.render()
+			this.mapView.render()
 		}
 	})
 

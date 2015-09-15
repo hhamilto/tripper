@@ -74,13 +74,13 @@ Pictures = (function(){
 		beingViewed: false,
 		initialize: function(options){
 			_.bindAll(this)
-			console.log(this.model)
-			this.$el.html(this.template(this.model))
-			this.render()
 			this.tripId = options.tripId
 			this.attached = options.attached
 			this.pictureListView = options.pictureListView
 			this.loaded = $.Deferred()
+
+			this.$el.html(this.template(this.model))
+			this.render()
 			var $img = this.$el.find('img')
 			if( $img.get(0).complete )
 				this.loaded.resolve()
@@ -118,7 +118,7 @@ Pictures = (function(){
 		render: function(){
 			ImageData(this.tripId).done(function(ImageData){
 				var location = ImageData.getLocationFor(this.model)
-				this.$el.find('.js-location').val(location?location.text:'')
+				this.$el.find('.js-location').val(location?location.locationText:'')
 			}.bind(this))
 		},
 		updateOffset: function(){
@@ -151,11 +151,11 @@ Pictures = (function(){
 					var locationFeature = _.find(this.locations.features, function(feature){
 						return feature.properties.id == model.id
 					})
-					if(!locationFeature || !model.location){
+					if(!locationFeature || !model.locationText){
 						// if we don't already have the location feature or we are deleting it.
 						this.generateLocationFeatures().done(_.partial(this.renderRoute,true))
 					}else{
-						locationFeature.geometry.coordinates = model.location.coordinates
+						locationFeature.geometry.coordinates = ImageData.getCoordinatesFor(model)
 						this.renderRoute(true)
 					}
 				}.bind(this))
@@ -171,10 +171,10 @@ Pictures = (function(){
 			this.locations = { "type": "FeatureCollection", "features": []}
 			return ImageData(this.tripId).done(function(ImageData){
 				this.locations.features = _.compact(_.map(ImageData.getPicInfos(), function(picInfo){
-					if(!picInfo.location) return
+					if(!picInfo.locationText) return
 
 					return { "type": "Feature",
-						"geometry": {"type": "Point", "coordinates": picInfo.location.coordinates },
+						"geometry": {"type": "Point", "coordinates": ImageData.getCoordinatesFor(picInfo) },
 						"properties": {"id": picInfo.id}
 					}
 				}))
@@ -200,6 +200,7 @@ Pictures = (function(){
 			}
 		},
 		render: function(force){
+			console.log(Date.now() + ": mapview render()")
 			if(!this.renderFlowControl.requestEntrance()) return
 			//do we have to rerender
 			this.renderFlowControl.inProgress = true

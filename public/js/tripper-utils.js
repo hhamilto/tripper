@@ -1,10 +1,10 @@
 
 
-ImageData = _.memoize(function(id){
+ImageData = _.memoize(function(tripId){
 	ImageDataDfd = $.Deferred()
 	var pics
 	$.ajax({
-		url: '/trip/'+id+'/pics',
+		url: '/trips/'+tripId+'/pics',
 		method: 'GET',
 		dataType: 'json',
 	}).done(function(picsFromServer){
@@ -15,14 +15,22 @@ ImageData = _.memoize(function(id){
 		getPicInfos: function(){
 			return pics
 		},
+		getCoordinatesFor: function(model){
+			// this could use some
+			if(!model.locationText)
+				return undefined
+			return [model.longitude, model.latitude]
+		},
 		setLocationForPic: _.throttle(function(model, locationString){
 			var localModel = _.find(pics, {id:model.id})//lets make sure we are using ours.
 			if(localModel != model ) alert("I am complaining about a problem. Look at the code.")
 			if(locationString == ''){
 				//user wants to clear out a location
-				delete model.location
+				delete model.locationText
+				delete model.longitude
+				delete model.latitude
 				$.ajax({
-					url: 'pics/'+model.id+'/location',
+					url: 'trips/'+tripId+'/pics/'+model.id+'/location',
 					method: 'DELETE'
 				})
 				this.trigger('locationUpdated', model)
@@ -41,7 +49,7 @@ ImageData = _.memoize(function(id){
 						coordinates: location
 					}
 					$.ajax({
-						url: 'pics/'+model.id+'/location',
+						url: 'trips/'+tripId+'/pics/'+model.id+'/location',
 						method: 'PUT',
 						contentType: 'application/json',
 						data: JSON.stringify(newLocation)
@@ -56,7 +64,7 @@ ImageData = _.memoize(function(id){
 		getLocationFor: function(model){
 			var index = _.findIndex(pics, {id:model.id})//lets make sure we are using ours.
 			while(model = pics[index--])
-				if(model.location) return model.location
+				if(model.locationText) return model//haha, this is a location now... :(
 		}
 	}
 

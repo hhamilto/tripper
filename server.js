@@ -18,7 +18,7 @@ app.use(express.static(__dirname + '/public'))
 app.use(bodyParser.text())
 app.use(bodyParser.json())
 
-app.get('/trip/:tripId/pics', function(req,res){
+app.get('/trips/:tripId/pics', function(req,res){
 	persistence.Pictures.get({
 		tripId: req.params.tripId
 	}).done(function(pics){
@@ -64,23 +64,31 @@ requestDirectionsMemod = function(queryString){
 }
 
 app.get('/directions', function(req,res){
-	res.sendStatus(500)//lol
 	requestDirectionsMemod(req.query.queryStringForDirections).done(function(directions){
 		res.send(JSON.stringify(directions))
 	})
 })
 
-app.put('/trip/:tripId/pics/:id/location', function(req,res){
-	var pic = persistence.Pictures.get({id:req.params.id})
-	pic.location = req.body
-	//XXX issss broken
-	res.sendStatus(200)
+app.put('/trips/:tripId/pics/:id/location', function(req,res){
+	var pic = persistence.Pictures.set({
+		id: req.params.id,
+		locationText: req.body.text,
+		latitude: req.body.coordinates[0],
+		longitude: req.body.coordinates[1]
+	}).done(function(picture){
+		res.end()
+	})
 })
 
-app['delete']('/trip/:tripId/pics/:id/location', function(req,res){
-	var pic = persistence.Pictures.delete({id:req.params.id})
-	//XXX issss broken
-	res.sendStatus(200)
+app['delete']('/trips/:tripId/pics/:id/location', function(req,res){
+	var pic = persistence.Pictures.set({
+		id: req.params.id,
+		locationText: null,
+		latitude: null,
+		longitude: null
+	}).done(function(picture){
+		res.end()
+	})
 })
 
 app.get('/trips', function(req,res){
