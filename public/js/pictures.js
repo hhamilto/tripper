@@ -107,7 +107,10 @@ Pictures = (function(){
 			if(this.editingLocation){
 				this.$el.find('button span.glyphicon').attr('class','glyphicon glyphicon-ok')
 				this.$el.find('button').attr('class','btn btn-primary')
-				this.$el.find('input').removeAttr('disabled')
+				//put the cursor at the end of the string (and enable input)
+				var $input = this.$el.find('input')
+				var tmp = $input.removeAttr('disabled').focus().val()
+				$input.val('').val(tmp)
 			}else{
 				this.$el.find('button span.glyphicon').attr('class','glyphicon glyphicon-pencil')
 				this.$el.find('button').attr('class','btn btn-default')
@@ -225,24 +228,19 @@ Pictures = (function(){
 			}.bind(this))
 		},
 		renderRoute: function(force){
-			console.log('\nrenderRoute1')
 			if(!this.ImageData || !this.pictureListView.picInView || !this.pictureListView.picInView.model || !this.path) return 
 
-			console.log('renderRoute2')
 			if(!force && this.oldPicInView == this.pictureListView.picInView) return
 			this.oldPicInView = this.pictureListView.picInView
 
-			console.log('renderRoute3')
 			var viewedLocation = this.ImageData.getLocationFor(this.pictureListView.picInView.model)
 			if(!viewedLocation) return
 
-			console.log('renderRoute4')
 			var viewedCoords = this.ImageData.getCoordinatesFor(viewedLocation)
 			var features = SVGDrawingUtil.getViewedFeatures(this.locations.features, viewedCoords)
 			var featureCollections = SVGDrawingUtil.getFeatureCollections(features)
 			if(featureCollections.travelRoutePlaces.features.length == 0) return
 
-			console.log('renderRoute5')
 			this.path.pointRadius(4.5)
 			this.svg.select("path.city")
 			  .datum(featureCollections.travelRoutePlaces)

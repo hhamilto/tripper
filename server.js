@@ -69,25 +69,9 @@ app.get('/directions', function(req,res){
 	})
 })
 
-app.put('/trips/:tripId/pics/:id/location', function(req,res){
-	var pic = persistence.Pictures.set({
-		id: req.params.id,
-		locationText: req.body.text,
-		latitude: req.body.coordinates[0],
-		longitude: req.body.coordinates[1]
-	}).done(function(picture){
-		res.end()
-	})
-})
-
-app['delete']('/trips/:tripId/pics/:id/location', function(req,res){
-	var pic = persistence.Pictures.set({
-		id: req.params.id,
-		locationText: null,
-		latitude: null,
-		longitude: null
-	}).done(function(picture){
-		res.end()
+app.put('/trips/:tripId/pics/:id', function(req,res){
+	var pic = persistence.Pictures.set(req.body).done(function(picture){
+		res.sendStatus(200)
 	})
 })
 

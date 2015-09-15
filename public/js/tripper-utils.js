@@ -25,13 +25,16 @@ ImageData = _.memoize(function(tripId){
 			var localModel = _.find(pics, {id:model.id})//lets make sure we are using ours.
 			if(localModel != model ) alert("I am complaining about a problem. Look at the code.")
 			if(locationString == ''){
-				//user wants to clear out a location
-				delete model.locationText
-				delete model.longitude
-				delete model.latitude
+				//user wants to clear out a location //uhg. never thought I'd say it but, needs more OO
+				model.locationText = null
+				model.longitude = null
+				model.latitude = null
 				$.ajax({
-					url: 'trips/'+tripId+'/pics/'+model.id+'/location',
-					method: 'DELETE'
+					url: 'trips/'+tripId+'/pics/'+model.id,
+					method: 'PUT',
+					contentType: 'application/json',
+					data: JSON.stringify(model),
+					dataType: 'text'
 				})
 				this.trigger('locationUpdated', model)
 			}
@@ -43,18 +46,16 @@ ImageData = _.memoize(function(tripId){
 				var status = resp.status
 				if (status === 'OK') {
 					var googleCoords = resp.results[0].geometry.location
-					var location = [googleCoords.lat, googleCoords.lng]
-					var newLocation = {
-						text: locationString,
-						coordinates: location
-					}
+					model.locationText = locationString
+					model.latitude = googleCoords.lat
+					model.longitude = googleCoords.lng
 					$.ajax({
-						url: 'trips/'+tripId+'/pics/'+model.id+'/location',
+						url: 'trips/'+tripId+'/pics/'+model.id,
 						method: 'PUT',
 						contentType: 'application/json',
-						data: JSON.stringify(newLocation)
+						data: JSON.stringify(model),
+						dataType: 'text'
 					})
-					model.location = newLocation
 					this.trigger('locationUpdated', model)
 				} else {
 					'ZERO_RESULTS' != status && alert('Geocode was not successful for the following reason: ' + status);
@@ -89,7 +90,6 @@ SVGDrawingUtil = (function(){
 			method: 'GET',
 			dataType: 'json'
 		}).then(function(directions){
-			console.log(directions)
 			var routePoints = polyline.decode(directions.routes[0].overview_polyline.points)
 			routePoints = _.reduce(routePoints, function(routePoints, routePoint){
 				if(distance(_.last(routePoints),routePoint) > .3)
