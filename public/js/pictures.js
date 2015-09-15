@@ -200,7 +200,6 @@ Pictures = (function(){
 			}
 		},
 		render: function(force){
-			console.log(Date.now() + ": mapview render()")
 			if(!this.renderFlowControl.requestEntrance()) return
 			//do we have to rerender
 			this.renderFlowControl.inProgress = true
@@ -226,19 +225,24 @@ Pictures = (function(){
 			}.bind(this))
 		},
 		renderRoute: function(force){
+			console.log('\nrenderRoute1')
 			if(!this.ImageData || !this.pictureListView.picInView || !this.pictureListView.picInView.model || !this.path) return 
 
+			console.log('renderRoute2')
 			if(!force && this.oldPicInView == this.pictureListView.picInView) return
 			this.oldPicInView = this.pictureListView.picInView
 
+			console.log('renderRoute3')
 			var viewedLocation = this.ImageData.getLocationFor(this.pictureListView.picInView.model)
 			if(!viewedLocation) return
 
-			var viewedCoords = viewedLocation.coordinates
+			console.log('renderRoute4')
+			var viewedCoords = this.ImageData.getCoordinatesFor(viewedLocation)
 			var features = SVGDrawingUtil.getViewedFeatures(this.locations.features, viewedCoords)
 			var featureCollections = SVGDrawingUtil.getFeatureCollections(features)
 			if(featureCollections.travelRoutePlaces.features.length == 0) return
 
+			console.log('renderRoute5')
 			this.path.pointRadius(4.5)
 			this.svg.select("path.city")
 			  .datum(featureCollections.travelRoutePlaces)

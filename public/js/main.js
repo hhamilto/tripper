@@ -76,17 +76,14 @@ $(document).ready(function(){
 			this.$el.html(this.template(this.model))
 		},
 		createNewTrip: function(){
-			console.log({name:this.$el.find('input.js-name').val()})
 			$.ajax({
 				url: '/trips',
 				method: 'PUT',
 				contentType:'application/json',
 				data: JSON.stringify({name:this.$el.find('input.js-name').val()||'New Trip'})
 			}).done(function(trip){
-				console.log("hello")
 				//looked at ajax file upload at: http://blog.teamtreehouse.com/uploading-files-ajax
 				var files = this.$el.find('input.js-upload').get(0).files
-				console.log(files)
 				var formData = new FormData()
 				_.each(files,function(file){
 					if (!file.type.match('image.*')) return

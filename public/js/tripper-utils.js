@@ -43,7 +43,7 @@ ImageData = _.memoize(function(tripId){
 				var status = resp.status
 				if (status === 'OK') {
 					var googleCoords = resp.results[0].geometry.location
-					var location = [googleCoords.lng, googleCoords.lat]
+					var location = [googleCoords.lat, googleCoords.lng]
 					var newLocation = {
 						text: locationString,
 						coordinates: location
@@ -102,26 +102,16 @@ SVGDrawingUtil = (function(){
 	return {
 		getViewedFeatures: function(features, viewedCoords){
 			return _.dropRightWhile(features, function(feature){
-				return feature.geometry.coordinates != viewedCoords
+				return ! _.isEqual(feature.geometry.coordinates, viewedCoords)
 			})
 		},
 		getFeatureCollections: function(features){
 			var travelRoutePlaces = { "type": "FeatureCollection", "features": features }
-			var travelRouteLine = { "type": "FeatureCollection", "features": [
-				{ "type": "Feature",
-						"geometry": {"type": "LineString", "coordinates": 
-							_.map(travelRoutePlaces.features, function(feature){
-								return feature.geometry.coordinates
-							})
-						 },
-				}
-			]}
 			var travelRouteCurrentPlace = { "type": "FeatureCollection", "features": [
 				_.last(travelRoutePlaces.features)
 			]}
 			return {
 				travelRoutePlaces:travelRoutePlaces,
-				travelRouteLine: travelRouteLine,
 				travelRouteCurrentPlace: travelRouteCurrentPlace
 			}
 		},
