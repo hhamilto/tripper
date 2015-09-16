@@ -116,3 +116,7 @@ body {
 	stroke-linejoin: round;
 	stroke-width: 3px;
 }
+
+progress {
+	width: 100%;
+}

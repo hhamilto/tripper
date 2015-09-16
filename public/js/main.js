@@ -92,6 +92,13 @@ $(document).ready(function(){
 				})
 				var xhr = new XMLHttpRequest()
 				xhr.open('PUT', '/trips/'+trip.id+'/photos', true)
+				if(xhr.upload){
+					var $progress = this.$el.find('progress')
+					xhr.upload.addEventListener('progress', function(progress){
+						$progress.attr('max',progress.total)
+						$progress.attr('value',progress.loaded)
+					})
+				}
 				xhr.onload = function () {
 					if (xhr.status === 200) {
 						appRouter.navigate('trips/'+trip.id, true)

@@ -10,6 +10,7 @@ busboy = require('connect-busboy')
 path = require('path')
 util = require('util')
 fs = require('fs')
+childProcess = require('child_process')
 
 app = express()
 
@@ -91,17 +92,19 @@ app.put('/trips/:id/photos', function(req,res){
 	if (req.busboy) {
 		req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
 			//reject bad mimetypes... XXX
-			var saveTo = path.join(__dirname, 'public','pics',filename)
+			var filePath = path.join(__dirname, 'public','pics',filename)
 			persistence.Pictures.create({
 				url: 'pics/'+filename,
 				tripid: req.params.id
 			}).done(function(id){
-				console.log('picId: '+ id)
+
 			})
-			file.pipe(fs.createWriteStream(saveTo))
+			file.pipe(fs.createWriteStream(filePath))
 		})
 		req.busboy.on('finish', function() {
-			res.end()
+			childProcess.exec(path.join(__dirname, 'fixImages.sh'), function(){
+				res.json({sucess:'sucess'})
+			})
 		})
 		req.pipe(req.busboy)
 	}
