@@ -43,6 +43,30 @@ body {
 
 }
 
+.pad {
+	padding: 20px
+}
+
+.upload-method-select a {
+	min-width: 300px
+}
+
+.title-bar {
+	height: 70px;
+	padding: 5px 30px;
+	background-color: #036;
+	color: white;
+}
+
+.title-bar h1 {
+	margin-top:.3em;
+}
+
+ul.trip-list {
+	list-style: none;
+	padding: 0;
+}
+
 .picture-view {
 	max-width: 420px;
 	box-shadow: 0 0 10px 0 rgba(0,0,0,.5);
@@ -119,4 +143,12 @@ body {
 
 progress {
 	width: 100%;
+}
+
+.inline-icon {
+	vertical-align: -.15em;
+}
+
+form input {
+	max-width: 500px
 }

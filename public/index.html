@@ -18,25 +18,65 @@
 	</div>
 
 	<script type="text/template" id="trip-list-template">
-		<h1>Trips</h1>
-		<ul class='js-trip-list'>
-		</ul>
-		<a class="btn btn-success" href="#/create-new-trip"><span class="glyphicon-add"></span> Create a New Trip</a>
+		<div class="title-bar">
+			<h1>Trips</h1>
+		</div>
+		<div class="pad">
+			<ul class='js-trip-list trip-list'>
+				<li>No trips</li>
+			</ul>
+			<a class="btn btn-success" href="#/create-new-trip"><span class="glyphicon-add"></span> Create a New Trip</a>
+		</div>
 	</script>
 
 	<script type="text/template" id="create-trip-template">
-		Import Pictures:
-		<a class="btn btn-default" href="#/create-new-trip/drive">Import From Google Drive </a>
-		<a class="btn btn-default" href="#/create-new-trip/upload">Upload Photos</a>
+		<div class="title-bar">
+			<h1>Create a new trip</h1>
+		</div>
+		<div class="pad">
+			<h2>Import Pictures from:</h2>
+			<form role="form" class="upload-method-select">
+	 			<div class="form-group">
+					<a class="btn btn-default btn-lg" href="#/create-new-trip/drive"><img src="assets/product20.png" class="inline-icon"/> Import from Google Drive </a>
+				</div>
+					<a class="btn btn-default btn-lg" href="#/create-new-trip/upload"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Photos</a>
+				</div>
+			</form>
+		</div>
 	</script>
 
+	<script type="text/template" id="drive-upload-template">
+		<div class="title-bar">
+			<h1>Import from Google Drive</h1>
+		</div>
+		<div class="pad">
+			Authorizing with Google ...
+		</div>
+	</script>
+
+	
+	
+
 	<script type="text/template" id="photo-upload-template">
-		<form role="form">
-			<input type="text" class="js-name" placeholder="Trip Name...">
-			<input type="file" class="js-upload" multiple>Choose Photos ... </input>
-			<progress max="100" value="0"></progress>
-			<button class="btn btn-default js-upload">Upload </button>
-		</form>
+		<div class="title-bar">
+			<h1>Upload photos</h1>
+		</div>
+		<div class="pad">
+			<form role="form">
+				<div class="form-group">
+					<label for="trip-name">Name your trip:</label>
+					<input type="text" class="js-name form-control" name="trip-name" placeholder="Trip Name...">
+				</div>
+				<div class="form-group">
+					<label for="exampleInputFile">Choose pictures to upload</label>
+					<input type="file" class="js-upload" multiple></input>
+				</div>
+				<div class="form-group hidden js-progress-bar">
+					<progress max="100" value="0"></progress>
+				</div>
+				<button class="btn btn-default js-upload">Upload </button>
+			</form>
+		</div>
 	</script>
 
 	<script type="text/template" id="trip-list-item-template">
@@ -82,6 +122,8 @@
 	<script src="js/tripper-utils.js"></script>
 	<script src="js/pictures.js"></script>
 	<script src="js/main.js"></script>
+
+	<script type="text/javascript" src="https://apis.google.com/js/client.js?onload=googleClientAuthCallback"></script>
 
 </body>
 </html>

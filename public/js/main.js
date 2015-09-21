@@ -5,6 +5,12 @@ usDfd = $.ajax({
 	dataType: 'json'
 })
 
+gapiLoaded = $.Deferred()
+
+googleClientAuthCallback = function(){
+	gapiLoaded.resolve()
+}
+
 
 $(document).ready(function(){
 
@@ -75,7 +81,10 @@ $(document).ready(function(){
 		initialize: function(){
 			this.$el.html(this.template(this.model))
 		},
-		createNewTrip: function(){
+		createNewTrip: function(e){
+			e.preventDefault()
+			this.$el.find('.js-progress-bar').removeClass('hidden')
+			this.$el.find('button.js-upload').attr('disabled','')
 			$.ajax({
 				url: '/trips',
 				method: 'PUT',
@@ -108,10 +117,71 @@ $(document).ready(function(){
 				}
 				xhr.send(formData)
 			}.bind(this))
+		},
+		render: function(){
+			this.$el.find('button.js-upload').removeAttr('disabled')
 		}
 	})
 
-	//lazy view creation
+	CreateNewTripViewFromDrive = Backbone.View.extend({
+		template: _.template($('#drive-upload-template').html()),
+		initialize: function(){
+			this.$el.html(this.template(this.model))
+			//ui presents: authorizing spinner
+			var CLIENT_ID = '1070366409195-dkfapucfumbav3larfvb7uvji6q06ut3.apps.googleusercontent.com'
+			var SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+		
+			function retrieveAllFiles(callback) {
+				var retrievePageOfFiles = function(request, result) {
+					request.execute(function(resp) {
+						console.log(resp)
+						result = result.concat(resp.items)
+						var nextPageToken = resp.nextPageToken
+						if (nextPageToken) {
+							request = gapi.client.drive.files.list({
+								'pageToken': nextPageToken
+							})
+							retrievePageOfFiles(request, result)
+						} else {
+							callback(result)
+						}
+					})
+				}
+				var initialRequest = gapi.client.drive.files.list()
+				retrievePageOfFiles(initialRequest, [])
+			}
+
+			var handleAuthResult = function handleAuthResult(authResult) {
+				console.log(authResult)
+				if (authResult) {
+					// Access token has been successfully retrieved, requests can be sent to the API
+					this.$el.find('.pad').html('successfully auth\'d. Loading drive API...')
+					gapi.client.load('drive', 'v2', function(){
+						retrieveAllFiles(function(fileArray){
+							this.$el.find('.pad').html('<pre>'+fileArray.join('\n')+'</pre>')
+						}.bind(this))
+					}.bind(this))
+				} else {
+					// No access token could be retrieved, force the authorization flow.
+					gapi.auth.authorize({
+						'client_id': CLIENT_ID,
+						'scope': SCOPES,
+						'immediate': false
+					},handleAuthResult)
+				}
+			}.bind(this)
+
+			gapiLoaded.done(function(){
+				gapi.auth.authorize({
+					'client_id': CLIENT_ID,
+					'scope': SCOPES,
+					'immediate': true
+				},handleAuthResult)
+			}.bind(this))
+		}
+	})
+
+	//lazy view creation with memoization
 	getView = _.memoize(function(viewName, arg){
 		if(viewName == 'tripListView')
 			return new TripListView
@@ -121,6 +191,8 @@ $(document).ready(function(){
 			return new CreateNewTripView
 		else if (viewName == 'createNewTripViewFromUpload')
 			return new CreateNewTripViewFromUpload
+		else if (viewName == 'createNewTripViewFromDrive')
+			return new CreateNewTripViewFromDrive
 		else
 			alert('Unrecognized view name: '+ viewName)
 	})
@@ -139,27 +211,36 @@ $(document).ready(function(){
 			$('#app-container').children().detach()
 			$('#app-container').append(tripView.el)
 			tripView.render()
+			window.document.title = "Trip"
 		},
 		trips: function() {
 			var tripListView = getView('tripListView')
 			$('#app-container').children().detach()
 			$('#app-container').append(tripListView.el)
 			tripListView.render()
+			window.document.title = "Trips"
 		},
 		createNewTrip: function(method){
+			window.document.title = "Create new trip"
 			if(method == 'drive'){
-
+				var createNewTripViewFromDrive = getView('createNewTripViewFromDrive')
+				$('#app-container').children().detach()
+				$('#app-container').append(createNewTripViewFromDrive.el)
+				createNewTripViewFromDrive.render()
 			}else if(method == 'upload'){
 				var createNewTripViewFromUpload = getView('createNewTripViewFromUpload')
 				$('#app-container').children().detach()
 				$('#app-container').append(createNewTripViewFromUpload.el)
+				createNewTripViewFromUpload.render()
 			}else{
 				var createNewTripView = getView('createNewTripView')
 				$('#app-container').children().detach()
 				$('#app-container').append(createNewTripView.el)
+				createNewTripView.render()
 			}
 		}
 	})
 	appRouter = new AppRouter
 	Backbone.history.start()
 })
+
