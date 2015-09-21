@@ -151,9 +151,9 @@ $(document).ready(function(){
 				retrievePageOfFiles(initialRequest, [])
 			}
 
-			var handleAuthResult = function handleAuthResult(authResult) {
+			var handleAuthResult = function(authResult) {
 				console.log(authResult)
-				if (authResult) {
+				if (!authResult.error) {
 					// Access token has been successfully retrieved, requests can be sent to the API
 					this.$el.find('.pad').html('successfully auth\'d. Loading drive API...')
 					gapi.client.load('drive', 'v2', function(){
