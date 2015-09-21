@@ -155,7 +155,8 @@ $(document).ready(function(){
 				console.log(authResult)
 				if (!authResult.error) {
 					// Access token has been successfully retrieved, requests can be sent to the API
-					this.$el.find('.pad').html('successfully auth\'d. Loading drive API...')
+					this.$el.find('.js-authorizing').addClass('hidden')
+					this.$el.find('.js-loading-drive').removeClass('hidden')
 					gapi.client.load('drive', 'v2', function(){
 						retrieveAllFiles(function(fileArray){
 							this.$el.find('.pad').html('<pre>'+fileArray.join('\n')+'</pre>')

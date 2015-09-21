@@ -50,11 +50,21 @@
 			<h1>Import from Google Drive</h1>
 		</div>
 		<div class="pad">
-			Authorizing with Google ...
+			<div class="js-authorizing">
+				Authorizing with Google ...
+			</div>
+			<div class="js-loading-drive hidden">
+				Loading Google Drive files ...
+			</div>
+			<div class="js-choose-folder hidden">
+				<a class="btn btn-success btn-lg" href="#/create-new-trip/upload"><span class="glyphicon glyphicon-cloud-upload"></span>Import images from this folder</a>
+				<ol class="js-drive-files">
+				</ol>
+			</div>
 		</div>
 	</script>
 
-	
+
 	
 
 	<script type="text/template" id="photo-upload-template">
