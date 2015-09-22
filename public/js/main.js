@@ -123,65 +123,6 @@ $(document).ready(function(){
 		}
 	})
 
-	CreateNewTripViewFromDrive = Backbone.View.extend({
-		template: _.template($('#drive-upload-template').html()),
-		initialize: function(){
-			this.$el.html(this.template(this.model))
-			//ui presents: authorizing spinner
-			var CLIENT_ID = '1070366409195-dkfapucfumbav3larfvb7uvji6q06ut3.apps.googleusercontent.com'
-			var SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
-		
-			function retrieveAllFiles(callback) {
-				var retrievePageOfFiles = function(request, result) {
-					request.execute(function(resp) {
-						console.log(resp)
-						result = result.concat(resp.items)
-						var nextPageToken = resp.nextPageToken
-						if (nextPageToken) {
-							request = gapi.client.drive.files.list({
-								'pageToken': nextPageToken
-							})
-							retrievePageOfFiles(request, result)
-						} else {
-							callback(result)
-						}
-					})
-				}
-				var initialRequest = gapi.client.drive.files.list()
-				retrievePageOfFiles(initialRequest, [])
-			}
-
-			var handleAuthResult = function(authResult) {
-				console.log(authResult)
-				if (!authResult.error) {
-					// Access token has been successfully retrieved, requests can be sent to the API
-					this.$el.find('.js-authorizing').addClass('hidden')
-					this.$el.find('.js-loading-drive').removeClass('hidden')
-					gapi.client.load('drive', 'v2', function(){
-						retrieveAllFiles(function(fileArray){
-							this.$el.find('.pad').html('<pre>'+fileArray.join('\n')+'</pre>')
-						}.bind(this))
-					}.bind(this))
-				} else {
-					// No access token could be retrieved, force the authorization flow.
-					gapi.auth.authorize({
-						'client_id': CLIENT_ID,
-						'scope': SCOPES,
-						'immediate': false
-					},handleAuthResult)
-				}
-			}.bind(this)
-
-			gapiLoaded.done(function(){
-				gapi.auth.authorize({
-					'client_id': CLIENT_ID,
-					'scope': SCOPES,
-					'immediate': true
-				},handleAuthResult)
-			}.bind(this))
-		}
-	})
-
 	//lazy view creation with memoization
 	getView = _.memoize(function(viewName, arg){
 		if(viewName == 'tripListView')
