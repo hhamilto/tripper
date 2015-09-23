@@ -1,7 +1,9 @@
 CreateNewTripViewFromDrive = Backbone.View.extend({
 	template: _.template($('#drive-upload-template').html()),
 	events: {
-		"click button.js-relogin": "reauthorize"
+		"click button.js-relogin": "reauthorize",
+		"click .your-drve-tab": "yourDriveActivated",
+		"click .shared-drive-tab": "sharedDriveActivated",
 	},
 	CLIENT_ID: '1070366409195-dkfapucfumbav3larfvb7uvji6q06ut3.apps.googleusercontent.com',
 	SCOPES: ['https://www.googleapis.com/auth/drive.readonly'],
@@ -9,17 +11,29 @@ CreateNewTripViewFromDrive = Backbone.View.extend({
 		_.bindAll(this)
 		this.$el.html(this.template(this.model))
 		//ui presents: authorizing spinner
-
+		this.$folderSpan = this.$el.find('.js-import-folder')
 		gapiLoaded.done(function(){
 			gapi.auth.authorize({
 				'client_id': this.CLIENT_ID,
 				'scope': this.SCOPES,
 				'login_hint': 'hhamilto@mtu.edu',
-				'immediate': true,/*
-				'immediate': false,
-				'approval_prompt' : 'force'*/
+				'immediate': true,
 			},this.handleAuthResult)
 		}.bind(this))
+	},
+	sharedDriveFolder: {
+		id: 'shared',
+		htmlRepresentation: 'Your Google Drive'
+	},
+	yourDriveFolder: {
+		id: 'root',
+		htmlRepresentation: 'Shared with you'
+	},
+	yourDriveActivated: function(){
+		this.$folderSpan.html('')
+	},
+	sharedDriveActivated: function(){
+		this.$folderSpan
 	},
 	retrieveChildren: function(options, callback) {
 		var retrievePageOfFiles = function(request, result) {
@@ -79,8 +93,8 @@ CreateNewTripViewFromDrive = Backbone.View.extend({
 						var driveItemView = new DriveItemView({fileId:file.id})
 						driveItemView.on('open', function(openedFile, htmlRepresentation){
 							//htmlRepresentation is slurped off the li
-							var $folderSpan = this.$el.find('.js-import-folder')
-							$folderSpan.html(htmlRepresentation)
+							this.$folderSpan.html(htmlRepresentation)
+							this.$folderSpan.data
 							this.$el.find(tabClass).empty()
 							var $up = this.$el.find(tabClass).append(this.upTemplate(file)).children(':last')
 							$up.on('click', function(e){
