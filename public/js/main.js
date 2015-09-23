@@ -70,56 +70,73 @@ $(document).ready(function(){
 		template: _.template($('#create-trip-template').html()),
 		initialize: function(){
 			this.$el.html(this.template(this.model))
-		}
-	})
 
-	var CreateNewTripViewFromUpload = Backbone.View.extend({
-		template: _.template($('#photo-upload-template').html()),
-		events: {
-			"click button.js-upload": "createNewTrip"
-		},
-		initialize: function(){
-			this.$el.html(this.template(this.model))
-		},
-		createNewTrip: function(e){
-			e.preventDefault()
-			this.$el.find('.js-progress-bar').removeClass('hidden')
-			this.$el.find('button.js-upload').attr('disabled','')
-			$.ajax({
-				url: '/trips',
-				method: 'PUT',
-				contentType:'application/json',
-				data: JSON.stringify({name:this.$el.find('input.js-name').val()||'New Trip'})
-			}).done(function(trip){
-				//looked at ajax file upload at: http://blog.teamtreehouse.com/uploading-files-ajax
-				var files = this.$el.find('input.js-upload').get(0).files
-				var formData = new FormData()
-				_.each(files,function(file){
-					if (!file.type.match('image.*')) return
-					// Add the file to the request.
-					formData.append('photos', file, file.name)
-				})
-				var xhr = new XMLHttpRequest()
-				xhr.open('PUT', '/trips/'+trip.id+'/photos', true)
-				if(xhr.upload){
-					var $progress = this.$el.find('progress')
-					xhr.upload.addEventListener('progress', function(progress){
-						$progress.attr('max',progress.total)
-						$progress.attr('value',progress.loaded)
-					})
-				}
-				xhr.onload = function () {
-					if (xhr.status === 200) {
-						appRouter.navigate('trips/'+trip.id, true)
-					} else {
-						alert('An error occurred!')
-					}
-				}
-				xhr.send(formData)
-			}.bind(this))
-		},
-		render: function(){
-			this.$el.find('button.js-upload').removeAttr('disabled')
+			      // The Browser API key obtained from the Google Developers Console.
+		      var developerKey = 'lE82uEQJ8wgowGa8HWN3Q-R_ ';
+
+		      // The Client ID obtained from the Google Developers Console. Replace with your own Client ID.
+		      var clientId = "1070366409195-dkfapucfumbav3larfvb7uvji6q06ut3.apps.googleusercontent.com "
+
+		      // Scope to use to access user's photos.
+		      var scope = ['https://www.googleapis.com/auth/photos'];
+
+		      var pickerApiLoaded = false;
+		      var oauthToken;
+
+		      // Use the API Loader script to load google.picker and gapi.auth.
+		      gapiLoaded.done(function onApiLoad() {
+		        gapi.load('auth', {'callback': onAuthApiLoad});
+		        gapi.load('picker', {'callback': onPickerApiLoad});
+		      })
+
+		      function onAuthApiLoad() {
+		        window.gapi.auth.authorize(
+		            {
+		              'client_id': clientId,
+		              'scope': scope,
+		              'immediate': false
+		            },
+		            handleAuthResult);
+		      }
+
+		      function onPickerApiLoad() {
+		        pickerApiLoaded = true;
+		        createPicker();
+		      }
+
+		      function handleAuthResult(authResult) {
+		        if (authResult && !authResult.error) {
+		          oauthToken = authResult.access_token;
+		          createPicker();
+		        }
+		      }
+
+		      // Create and render a Picker object for picking user Photos.
+		      function createPicker() {
+		        if (pickerApiLoaded && oauthToken) {
+		          var picker = new google.picker.PickerBuilder().
+		              addView(google.picker.ViewId.PHOTOS).
+		              setOAuthToken(oauthToken).
+		              setDeveloperKey(developerKey).
+		              setCallback(pickerCallback).
+		              build();
+		          picker.setVisible(true);
+		        }
+		      }
+
+		      // A simple callback implementation.
+		      function pickerCallback(data) {
+		        var url = 'nothing';
+		        if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
+		          var doc = data[google.picker.Response.DOCUMENTS][0];
+		          url = doc[google.picker.Document.URL];
+		        }
+		        var message = 'You picked: ' + url;
+		        document.getElementById('result').innerHTML = message;
+		      }
+
+
+
 		}
 	})
 

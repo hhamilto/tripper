@@ -34,88 +34,11 @@
 			<h1>Create a new trip</h1>
 		</div>
 		<div class="pad">
-			<h2>Import Pictures from:</h2>
-			<form role="form" class="upload-method-select">
-	 			<div class="form-group">
-					<a class="btn btn-default btn-lg" href="#/create-new-trip/drive"><img src="assets/product20.png" class="inline-icon"/> Import from Google Drive </a>
-				</div>
-					<a class="btn btn-default btn-lg" href="#/create-new-trip/upload"><span class="glyphicon glyphicon-cloud-upload"></span> Upload Photos</a>
-				</div>
-			</form>
+			<h2>Import Pictures </h2>
 		</div>
 	</script>
 
-	<script type="text/template" id="drive-upload-template">
-		<div class="title-bar">
-			<h1>Import from Google Drive</h1>
-		</div>
-		<div class="pad">
-			<div class="js-authorizing">
-				Authorizing with Google ...
-			</div>
-			<div class="js-loading-drive hidden">
-				Loading Google Drive files ...
-			</div>
-			<div class="js-choose-folder drive-file-chooser hidden">
 
-	 			<div class="form-group">
-					<button class="btn btn-success js-submit-import-folder"><span class="glyphicon glyphicon-cloud-upload"></span> Import images from <span class="js-import-folder" data-folder-id="root">Your Drive</span></button>
-					<button class="btn btn-default js-relogin hidden">Login to another google account</button>
-				</div>
-	 			<div class="form-group">
-					<button class="btn btn-default hidden">&lt;&mdash; parent folder</button>
-				</div>
-
-
-				<ul class="nav nav-tabs" role="tablist">
-					<li role="presentation" class="active"><a class="js-your-drive-tab" href="#drive-files-owned" aria-controls="home" role="tab" data-toggle="tab">Your Files</a></li>
-					<li role="presentation"><a class="js-shared-drive-tab" href="#drive-files-shared" aria-controls="profile" role="tab" data-toggle="tab">Shared with you</a></li>
-				</ul>
-
-				<div class="tab-content">
-					<div role="tabpanel" class="tab-pane active" id="drive-files-owned">
-						<ol class="js-drive-files-owned drive-file-list">
-						</ol>
-					</div>
-					<div role="tabpanel" class="tab-pane" id="drive-files-shared">
-						<ol class="js-drive-files-shared drive-file-list">
-						</ol>
-					</div>
-				</div>
-
-			</div>
-		</div>
-	</script>
-
-	<script type="text/template" id="drive-item-template">
-		<a href="#"><img src="<%=iconLink%>" class="inline-icon"> <%=title%></a>
-	</script>
-
-	<script type="text/template" id="drive-up-folder-template">
-		<a href="#"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
-	</script>
-
-	<script type="text/template" id="photo-upload-template">
-		<div class="title-bar">
-			<h1>Upload photos</h1>
-		</div>
-		<div class="pad">
-			<form role="form">
-				<div class="form-group">
-					<label for="trip-name">Name your trip:</label>
-					<input type="text" class="js-name form-control" name="trip-name" placeholder="Trip Name...">
-				</div>
-				<div class="form-group">
-					<label for="exampleInputFile">Choose pictures to upload</label>
-					<input type="file" class="js-upload" multiple></input>
-				</div>
-				<div class="form-group hidden js-progress-bar">
-					<progress max="100" value="0"></progress>
-				</div>
-				<button class="btn btn-default js-upload">Upload </button>
-			</form>
-		</div>
-	</script>
 
 	<script type="text/template" id="trip-list-item-template">
 		<a href="#trips/<%=id%>"><%=name%></a>
