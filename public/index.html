@@ -59,7 +59,7 @@
 			<div class="js-choose-folder drive-file-chooser hidden">
 
 	 			<div class="form-group">
-					<button class="btn btn-success js-submit-import-folder"><span class="glyphicon glyphicon-cloud-upload"></span> Import images from <span class="js-import-folder" data-folder-id="root">Your Drive</span></button>
+					<button class="btn btn-success js-submit-import-folder"><span class="glyphicon glyphicon-cloud-upload"></span> Import images from <span class="js-import-folder" data-folder-id="root">Your Google Drive</span></button>
 					<button class="btn btn-default js-relogin hidden">Login to another google account</button>
 				</div>
 	 			<div class="form-group">
@@ -73,18 +73,17 @@
 				</ul>
 
 				<div class="tab-content">
-					<div role="tabpanel" class="tab-pane active" id="drive-files-owned">
-						<ol class="js-drive-files-owned drive-file-list">
-						</ol>
-					</div>
-					<div role="tabpanel" class="tab-pane" id="drive-files-shared">
-						<ol class="js-drive-files-shared drive-file-list">
-						</ol>
-					</div>
 				</div>
 
 			</div>
 		</div>
+	</script>
+
+
+	<script type="text/template" id="drive-folder-picker-template">
+		<ol class="drive-file-list">
+			<li>Loading file list...</li>
+		</ol>
 	</script>
 
 	<script type="text/template" id="drive-item-template">

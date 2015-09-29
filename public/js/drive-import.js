@@ -1,12 +1,15 @@
+
+
 CreateNewTripViewFromDrive = Backbone.View.extend({
 	template: _.template($('#drive-upload-template').html()),
 	events: {
 		"click button.js-relogin": "reauthorize",
-		"click .your-drve-tab": "yourDriveActivated",
-		"click .shared-drive-tab": "sharedDriveActivated",
+		"click .js-your-drive-tab": "yourDriveActivated",
+		"click .js-shared-drive-tab": "sharedDriveActivated",
 	},
 	CLIENT_ID: '1070366409195-dkfapucfumbav3larfvb7uvji6q06ut3.apps.googleusercontent.com',
 	SCOPES: ['https://www.googleapis.com/auth/drive.readonly'],
+	
 	initialize: function(){
 		_.bindAll(this)
 		this.$el.html(this.template(this.model))
@@ -21,105 +24,25 @@ CreateNewTripViewFromDrive = Backbone.View.extend({
 			},this.handleAuthResult)
 		}.bind(this))
 	},
-	sharedDriveFolder: {
-		id: 'shared',
-		htmlRepresentation: 'Your Google Drive'
+	authSuccess: function(){
+		// Access token has been successfully retrieved, requests can be sent to the API
+		this.$el.find('.js-authorizing').addClass('hidden')
+		this.$el.find('.js-choose-folder').removeClass('hidden')
+		
+		gapi.client.load('drive', 'v2', function(){
+			this.$el.find('.js-loading-drive').addClass('hidden')
+			this.$el.find('.js-').removeClass('hidden')
+			this.yourDriveFilePickerView = new YourDriveFilePickerView
+		//	this.sharedDriveFilePickerView = new SharedDriveFilePickerView
+			this.$el.find('.tab-content')
+			.append(this.yourDriveFilePickerView.el)
+		//	.append(this.sharedDriveFilePickerView.el)
+		}.bind(this))
 	},
-	yourDriveFolder: {
-		id: 'root',
-		htmlRepresentation: 'Shared with you'
-	},
-	yourDriveActivated: function(){
-		this.$folderSpan.html('')
-	},
-	sharedDriveActivated: function(){
-		this.$folderSpan
-	},
-	retrieveChildren: function(options, callback) {
-		var retrievePageOfFiles = function(request, result) {
-			request.execute(function(resp) {
-				result = result.concat(resp.items)
-				var nextPageToken = resp.nextPageToken
-				if (nextPageToken) {
-					request = gapi.client.drive.children.list(_.defaults({
-						'pageToken': nextPageToken
-					}, options))
-					retrievePageOfFiles(request, result)
-				} else {
-					callback(result)
-				}
-			}.bind(this))
-		}.bind(this)
-		var initialRequest = gapi.client.drive.children.list(options)
-		retrievePageOfFiles(initialRequest, [])
-	},
-	retrieveShared: function(options, callback) {
-		_.defaults(options,{
-			'q': 'sharedWithMe AND trashed=false'
-		})
-		var retrievePageOfFiles = function(request, result) {
-			request.execute(function(resp) {
-				console.log('shared req-resp: items.length: '+resp.items.length)
-				result = result.concat(resp.items)
-				var nextPageToken = resp.nextPageToken
-				if (nextPageToken) {
-					request = gapi.client.drive.files.list(_.defaults({
-						'pageToken': nextPageToken
-					}, options))
-					retrievePageOfFiles(request, result)
-				} else {
-					callback(result)
-				}
-			}.bind(this))
-		}.bind(this)
-		var initialRequest = gapi.client.drive.files.list(options)
-		retrievePageOfFiles(initialRequest, [])
-	},
-	upTemplate: _.template($('#drive-up-folder-template').html()),
 	handleAuthResult: function(authResult) {
 		console.log(authResult)
 		if (!authResult.error) {
-			// Access token has been successfully retrieved, requests can be sent to the API
-			this.$el.find('.js-authorizing').addClass('hidden')
-			this.$el.find('.js-loading-drive').removeClass('hidden')
-			var populateFileList = function(tabClass){
-				var lastFileArray
-				var populateFromFileArray = function(fileArray){
-					lastFileArray = fileArray
-					this.$el.find('.js-loading-drive').addClass('hidden')
-					this.$el.find('.js-choose-folder').removeClass('hidden')
-					console.log(fileArray)
-					_.each(fileArray, function(file){
-						var driveItemView = new DriveItemView({fileId:file.id})
-						driveItemView.on('open', function(openedFile, htmlRepresentation){
-							//htmlRepresentation is slurped off the li
-							this.$folderSpan.html(htmlRepresentation)
-							this.$folderSpan.data
-							this.$el.find(tabClass).empty()
-							var $up = this.$el.find(tabClass).append(this.upTemplate(file)).children(':last')
-							$up.on('click', function(e){
-								e.preventDefault()
-								this.$el.find(tabClass).empty()
-								populateFromFileArray(lastFileArray)
-							}.bind(this))
-							this.retrieveChildren({
-								folderId: openedFile.id,
-								q: 'trashed=false'
-							},populateFileList(tabClass))
-						}.bind(this))
-						this.$el.find(tabClass).append(driveItemView.el)
-					}.bind(this))
-				}.bind(this)
-				return populateFromFileArray
-			}.bind(this)
-			gapi.client.load('drive', 'v2', function(){
-				this.retrieveChildren({
-					folderId: 'root',
-					q: 'trashed=false'
-				},populateFileList('.js-drive-files-owned'))
-				this.retrieveShared({
-				},populateFileList('.js-drive-files-shared'))
-			}.bind(this))
+			this.authSuccess()
 		} else {
 			// No access token could be retrieved, force the authorization flow.
 			gapi.auth.authorize({
@@ -139,7 +62,161 @@ CreateNewTripViewFromDrive = Backbone.View.extend({
 	}
 })
 
-var count = 0
+var File = Backbone.Model.extend({
+	parent: null,
+	googleFileId: null,
+	fetchingFileList: false,
+	iconLink:'',
+	title:'',
+	getFileList: function() {
+		this.set('fetchingFileList',true)
+		var options = {
+			folderId: this.get('googleFileId'),
+			q: 'trashed=false'
+		}
+		var retrievePageOfFiles = function(request) {
+			request.execute(function(resp) {
+				var fileArray = []
+				var countDown = Latch(resp.items.length, function(){
+					this.trigger('filesLoaded', fileArray)
+				}.bind(this))
+				_.each(resp.items, function(file,i){
+					gapi.client.drive.files.get({
+						fileId: file.id
+					}).execute(function(fileInfo){
+						var file = new File({
+							googleFileId: fileInfo.id,
+							parent: this,
+							iconLink: fileInfo.iconLink,
+							title: fileInfo.title
+						})
+						fileArray[i] = file
+						countDown()
+					}.bind(this))
+				}.bind(this))
+
+				var nextPageToken = resp.nextPageToken
+				if (nextPageToken) {
+					request = gapi.client.drive.children.list(_.defaults({
+						'pageToken': nextPageToken
+					}, options))
+					retrievePageOfFiles(request)
+				} else {
+					this.set('fetchingFileList', false)
+					this.trigger('filesDoneLoading')
+				}
+			}.bind(this))
+		}.bind(this)
+		var initialRequest = gapi.client.drive.children.list(options)
+		retrievePageOfFiles(initialRequest)
+	}
+})
+
+var YourDriveFilePickerView = Backbone.View.extend({
+	template: _.template($('#drive-folder-picker-template').html()),
+	upTemplate: _.template($('#drive-up-folder-template').html()),
+	attributes: {
+		role:"tabpanel",
+		class:"tab-pane active",
+		id: "drive-files-owned"
+	},
+	initialize: function(options){
+		_.bindAll(this)
+		this.$el.html(this.template())
+		this.model = new File({
+			googleFileId:'root'
+		})
+		this.loadFilesFromModel()
+	},
+	loadFilesFromModel: function(){
+		this.model.on('filesLoaded', this.appendFiles)
+		/*var filesDoneLoadingHander = function(){
+			this.model.off('filesLoaded', this.appendFiles)
+			this.model.off('filesDoneLoading', filesDoneLoadingHander)
+		}.bind(this)
+		this.model.on('filesDoneLoading',filesDoneLoadingHander)*/
+		this.model.getFileList()
+
+	},
+	appendFiles: function(fileArray){
+		console.log('yo')
+		var $ol = this.$el.find('ol')
+		$ol.empty()
+		if(this.model.get('parent')){
+			var $up = this.$el.find('ol').append(this.upTemplate()).children(':last')
+			$up.on('click', function(e){
+				e.preventDefault()
+				this.trigger('selected', this.model.get('parent'))
+				this.model = this.model.get('parent')
+				this.loadFilesFromModel()
+			}.bind(this))
+		}
+
+		var before = Date.now()
+		$ol.hide()
+		_.each(fileArray, function(file){
+
+			var driveItemView = new DriveItemView({
+				model: file,
+				parentView:this
+			})
+			driveItemView.on('open', function(folder){
+				this.trigger('selected', folder)
+				$ol.empty()
+				this.model = file
+				this.loadFilesFromModel()
+			}.bind(this))
+			$ol.append(driveItemView.el)
+		}.bind(this))
+		$ol.show()
+		console.log('lol', Date.now() - before)
+	}
+})
+
+var SharedDriveFilePickerView = Backbone.View.extend({
+	template: _.template($('#drive-folder-picker-template').html()),
+	upTemplate: _.template($('#drive-up-folder-template').html()),
+	attributes: {
+		role:"tabpanel",
+		class:"tab-pane",
+		id: "drive-files-shared"
+	},
+	initialize: function(){
+		_.bindAll(this)
+		this.$el.html(this.template())
+
+		this.retrieveShared(this.populateFromFileArray)
+	},
+	retrieveShared: function(options, callback) {
+		if(typeof options == 'function'){
+			callback = options
+			options = {}
+		}
+		_.defaults(options,{
+			'q': 'sharedWithMe AND trashed=false'
+		})
+		var retrievePageOfFiles = function(request, result) {
+			request.execute(function(resp) {
+				console.log('shared req-resp: items.length: '+resp.items.length)
+				result = result.concat(resp.items)
+				var nextPageToken = resp.nextPageToken
+				if (nextPageToken) {
+					request = gapi.client.drive.files.list(_.defaults({
+						'pageToken': nextPageToken
+					}, options))
+					retrievePageOfFiles(request, result)
+				} else {
+					callback(result, {
+						folderId: 'sharedWithMe',
+						htmlRepresentation: "Shared with me"
+					})
+				}
+			}.bind(this))
+		}.bind(this)
+		var initialRequest = gapi.client.drive.files.list(options)
+		retrievePageOfFiles(initialRequest, [])
+	}
+})
 
 var DriveItemView = Backbone.View.extend({
 	template: _.template($('#drive-item-template').html()),
@@ -148,24 +225,10 @@ var DriveItemView = Backbone.View.extend({
 		"click a": "open"
 	},
 	initialize: function(options){
-		_.bindAll(this)
-		if(!options.model)
-			gapi.client.drive.files.get({
-				fileId: options.fileId
-			}).execute(function(fileInfo){
-				this.model = fileInfo
-				this.render()
-			}.bind(this))
-		else
-			this.render()
-		if(options.shared)
-			count++
-	},
-	render: function(){
-		this.$el.html(this.template(this.model))
+		this.$el.html(this.template(this.model.attributes))
 	},
 	open: function(e){
 		e.preventDefault()
-		this.trigger('open', this.model, this.$el.find('a').html())
+		this.trigger('open', this.model)
 	}
 })

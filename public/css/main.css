@@ -167,3 +167,8 @@ ol.drive-file-list li a {
 .drive-file-chooser h2 {
 	background: #DDD
 }
+
+
+a:focus {
+    outline:0; /*removes the dotted border*/
+}
