@@ -27,14 +27,14 @@ CreateNewTripViewFromDrive = Backbone.View.extend({
 	authSuccess: function(){
 		// Access token has been successfully retrieved, requests can be sent to the API
 		this.$el.find('.js-authorizing').addClass('hidden')
-		this.$el.find('.js-choose-folder').removeClass('hidden')
+		this.$el.find('js-loading-drive').removeClass('hidden')
 		
 		gapi.client.load('drive', 'v2', function(){
 			this.$el.find('.js-loading-drive').addClass('hidden')
-			this.$el.find('.js-').removeClass('hidden')
+			this.$el.find('.js-choose-folder').removeClass('hidden')
 			this.yourDriveFilePickerView = new YourDriveFilePickerView
 		//	this.sharedDriveFilePickerView = new SharedDriveFilePickerView
-			this.$el.find('.tab-content')
+			this.$el.find('.js-folder-picker-container')
 			.append(this.yourDriveFilePickerView.el)
 		//	.append(this.sharedDriveFilePickerView.el)
 		}.bind(this))

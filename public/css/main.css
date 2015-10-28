@@ -164,11 +164,11 @@ ol.drive-file-list li a {
 	padding: 2px;
 }
 
+.drive-file-chooser {
+	display: flex-container
+}
+
 .drive-file-chooser h2 {
 	background: #DDD
 }
 
-
-a:focus {
-    outline:0; /*removes the dotted border*/
-}

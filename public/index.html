@@ -54,31 +54,33 @@
 				Authorizing with Google ...
 			</div>
 			<div class="js-loading-drive hidden">
-				Loading Google Drive files ...
+				Loading Google Drive ...
 			</div>
 			<div class="js-choose-folder drive-file-chooser hidden">
 
-	 			<div class="form-group">
-					<button class="btn btn-success js-submit-import-folder"><span class="glyphicon glyphicon-cloud-upload"></span> Import images from <span class="js-import-folder" data-folder-id="root">Your Google Drive</span></button>
-					<button class="btn btn-default js-relogin hidden">Login to another google account</button>
+				<strong>Import files from: </strong><div class="btn-group">
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						Your Files <span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu">
+						<li><a class="js-your-drive-tab" href="#">Your Files</a></li>
+						<li><a class="js-shared-drive-tab" href="#">Shared with you</a></li>
+					</ul>
 				</div>
-	 			<div class="form-group">
-					<button class="btn btn-default hidden">&lt;&mdash; parent folder</button>
+
+				<div class="js-folder-picker-container">
 				</div>
 
-
-				<ul class="nav nav-tabs" role="tablist">
-					<li role="presentation" class="active"><a class="js-your-drive-tab" href="#drive-files-owned" aria-controls="home" role="tab" data-toggle="tab">Your Files</a></li>
-					<li role="presentation"><a class="js-shared-drive-tab" href="#drive-files-shared" aria-controls="profile" role="tab" data-toggle="tab">Shared with you</a></li>
-				</ul>
-
-				<div class="tab-content">
+				<div style="height:70px"></div><!--dumb spacer. XXX: rewrite to use flex box-->
+				<div class="import-images-button-container">
+					<div class="form-group">
+						<button class="btn btn-success js-submit-import-folder"><span class="glyphicon glyphicon-cloud-upload"></span> Import images from <span class="js-import-folder" data-folder-id="root">Your Google Drive</span></button>
+					</div>
 				</div>
 
 			</div>
 		</div>
 	</script>
-
 
 	<script type="text/template" id="drive-folder-picker-template">
 		<ol class="drive-file-list">
