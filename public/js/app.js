@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('Tripper', [
   'ngRoute',
   'TripListView',
