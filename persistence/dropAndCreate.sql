@@ -1,3 +1,0 @@
-DROP DATABASE Tripper;
-CREATE DATABASE Tripper;
-USE Tripper;

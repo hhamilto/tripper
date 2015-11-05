@@ -1,4 +1,0 @@
-CREATE TABLE Migrations (
-	id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	fileName varchar(255) NOT NULL
-);

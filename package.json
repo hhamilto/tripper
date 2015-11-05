@@ -9,11 +9,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.0.2",
     "body-parser": "^1.13.3",
     "connect-busboy": "0.0.2",
     "deferred": "^0.7.2",
     "express": "^4.13.3",
     "lodash": "^3.10.1",
+    "mongodb": "^2.0.47",
     "mysql": "^2.9.0",
     "request": "^2.61.0"
   }
