@@ -1,0 +1,19 @@
+<div class="title-bar">
+	<h1>Upload photos</h1>
+</div>
+<div class="pad">
+	<form role="form" ng-controller="CreateTripController as createTripCtrl">
+		<div class="form-group">
+			<label for="trip-name">Where did you travel to?</label>
+			<input type="text" class="js-name form-control" name="trip-name" ng-model="createTripCtrl.trip.destination" placeholder="Alaska">
+		</div>
+		<div class="form-group">
+			<label for="exampleInputFile">Choose pictures to upload</label>
+			<input type="file" class="js-upload" fileread="createTripCtrl.files" multiple></input>
+		</div>
+		<div class="form-group hidden js-progress-bar">
+			<progress max="100" value="0"></progress>
+		</div>
+		<button ng-click="createTripCtrl.saveTrip()" class="btn btn-default js-upload">Upload </button>
+	</form>
+</div>
