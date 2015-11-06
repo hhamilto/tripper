@@ -11,8 +11,8 @@
 			<label for="exampleInputFile">Choose pictures to upload</label>
 			<input type="file" class="js-upload" fileread="createTripCtrl.files" multiple></input>
 		</div>
-		<div class="form-group hidden js-progress-bar">
-			<progress max="100" value="0"></progress>
+		<div ng-show="createTripCtrl.uploadProgress" class="form-group js-progress-bar">
+			<progress max="{{createTripCtrl.uploadProgres.total}}" value="{{createTripCtrl.uploadProgress.loaded}}"></progress>
 		</div>
 		<button ng-click="createTripCtrl.saveTrip()" class="btn btn-default js-upload">Upload </button>
 	</form>

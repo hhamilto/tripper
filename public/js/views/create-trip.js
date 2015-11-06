@@ -7,7 +7,7 @@ angular.module('CreateTripView', ['ngRoute'])
 		templateUrl: '/templates/create-trip.html',
 		controller: 'CreateTripController'
 	})
-}]).controller('CreateTripController', [function() {
+}]).controller('CreateTripController', ['$scope',function($scope) {
 	this.trip = {}
 	this.saveTrip = function(){
 		_.defaults(this.trip,{destination:"Anywhere"})
@@ -28,11 +28,13 @@ angular.module('CreateTripView', ['ngRoute'])
 			var xhr = new XMLHttpRequest()
 			xhr.open('PUT', '/trips/'+trip.id+'/photos', true)
 			if(xhr.upload){
-				var $progress = this.$el.find('progress')
+				this.uploadProgress = {}
 				xhr.upload.addEventListener('progress', function(progress){
+					this.uploadProgress = progress
+					/*
 					$progress.attr('max',progress.total)
-					$progress.attr('value',progress.loaded)
-				})
+					$progress.attr('value',progress.loaded*/
+				}.bind(this))
 			}
 			xhr.onload = function () {
 				if (xhr.status === 200) {

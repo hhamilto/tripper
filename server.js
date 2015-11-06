@@ -12,6 +12,10 @@ const util = require('util')
 const fs = require('fs')
 const childProcess = require('child_process')
 
+const conf = {
+	"picture-directory": path.join(__dirname,'pictures')
+}
+
 app = express()
 
 app.use(busboy())
@@ -91,14 +95,14 @@ app.put('/trips/:id/photos', function(req,res){
 	if (req.busboy) {
 		req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
 			//reject bad mimetypes... XXX
-			var filePath = path.join(__dirname, 'public','pics',filename)
-			persistence.Pictures.create({
-				url: 'pics/'+filename,
-				tripid: req.params.id
-			}).done(function(id){
-
+			db.collection('photos').insertOneAsync({
+				tripId: new mongodb.ObjectId(req.params.id)
+			}).then(function(result) {
+				var pictureId =result.insertedId;
+				var filePath = path.join(conf["picture-directory"],pictureId)
+				file.pipe(fs.createWriteStream(filePath))
+				res.json({_id:pictureId})
 			})
-			file.pipe(fs.createWriteStream(filePath))
 		})
 		req.busboy.on('finish', function() {
 			childProcess.exec(path.join(__dirname, 'fixImages.sh'), function(){
