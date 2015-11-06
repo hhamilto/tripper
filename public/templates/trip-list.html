@@ -1,3 +1,5 @@
-<ul>
+<ul ng-controller="TripListController as tlc">
 	<li><a href="#/create-trip"> + Add a trip </a></li>
+	<li ng-repeat="trip in tlc.trips"><a ng-href="#/trips/{{trip._id}}"> {{trip.destination}} </a></li>
+	trip count: {{tlc.trips.length}}
 </ul>

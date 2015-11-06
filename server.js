@@ -1,15 +1,16 @@
-express = require('express')
-bodyParser = require('body-parser')
-_ = require('lodash')
-Promise = require('bluebird')
-request = Promise.promisify(require('request'))
-MongoClient = Promise.promisifyAll(require('mongodb').MongoClient)
-busboy = require('connect-busboy')
+const express = require('express')
+const bodyParser = require('body-parser')
+const _ = require('lodash')
+const Promise = require('bluebird')
+const request = Promise.promisify(require('request'))
+const mongodb = Promise.promisifyAll(require('mongodb'))
+const MongoClient = mongodb.MongoClient
+const busboy = require('connect-busboy')
 
-path = require('path')
-util = require('util')
-fs = require('fs')
-childProcess = require('child_process')
+const path = require('path')
+const util = require('util')
+const fs = require('fs')
+const childProcess = require('child_process')
 
 app = express()
 
@@ -18,10 +19,6 @@ app.use(express.static(__dirname + '/public'))
 app.use(bodyParser.text())
 app.use(bodyParser.json())
 
-
-var url = 'mongodb://hurricanesarina.tk:27017/test';
-
-var mongoConnection = MongoClient.connectAsync(url)
 
 app.get('/trips/:tripId/pics', function(req,res){
 	persistence.Pictures.get({
@@ -73,21 +70,20 @@ app.put('/trips/:tripId/pics/:id', function(req,res){
 })
 
 app.get('/trips', function(req,res){
-	var cursor = mongoConnection.collection('trips').find()
-	var trips = []
-	cursor.each(function(err, trip){
-		if(err) throw err
-		if (trip!= null) {
-			trips.push(trip)
-		} else {
-			res.json(trips)
-		}
+	db.collection('trips').find().toArray().then(function(trips){
+		res.json(trips)
+	})
+})
+
+app.get('/trips/:id', function(req,res){
+	db.collection('trips').find({_id: new mongodb.ObjectId(req.params.id)}).limit(1).next().then(function(trip){
+		res.json(trip)
 	})
 })
 
 app.put('/trips', function(req,res){
-	persistence.Trips.create(req.body).done(function(tripId){
-		res.json({id:tripId})
+	db.collection('trips').insertOneAsync(req.body).then(function(result) {
+		res.json({id:result.insertedId})
 	})
 })
 
@@ -115,8 +111,9 @@ app.put('/trips/:id/photos', function(req,res){
 
 module.exports = {
 	initialize: function(){
-		MongoClient.connect(url, function(err,db){
-			mongoConnection = db
+		var databaseUrl = 'mongodb://hurricanesarina.tk:27017/tripper';
+		MongoClient.connectAsync(databaseUrl).done(function(createdDb){
+			db = createdDb
 			app.listen(3000)
 		})
 	}

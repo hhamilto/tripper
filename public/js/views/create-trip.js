@@ -19,7 +19,6 @@ angular.module('CreateTripView', ['ngRoute'])
 			data: JSON.stringify(this.trip)
 		}).done(function(trip){
 			//looked at ajax file upload at: http://blog.teamtreehouse.com/uploading-files-ajax
-			
 			var formData = new FormData()
 			_.each(this.files,function(file){
 				if (!file.type.match('image.*')) return
