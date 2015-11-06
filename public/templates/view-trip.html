@@ -1,4 +1,20 @@
 <div ng-controller="TripController as tc">
-	<h1>imatrip</h1>
-	{{tc.trip.destination}}
+	<div class="pics">
+		<div ng-repeat="pic in tc.pics">
+			<img ng-src="/trips/{{tc.trip._id}}/photos/{{pic._id}}?size=400" />
+			<form role="form" class="form-inline">
+				<input class="form-control js-location" name="location" type="text" ng-model="pic.location" />
+				<button class="btn btn-default"><span class="glyphicon glyphicon-pencil"></span></button>
+			</form>
+		</div>
+	</div>
+	<div class="map">
+		<svg>
+			<path class="borders land"/>
+			<path class="borders states"/>
+			<path class="travel-route"/>
+			<path class="city"/>
+			<path class="current-place"/>
+		</svg>
+	</div>
 </ul>

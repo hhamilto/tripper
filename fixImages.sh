@@ -1,14 +1,14 @@
 #! /bin/bash
-shopt -s nocasematch
-while read -r imagefile ; do
-	if [[ $imagefile != *.jpg ]] ; then  #if it aint a jpeg nix it
-		rm $imagefile
-		continue
-	fi
-	if [[ $imagefile == *\(* ]] ; then  #if it dup nix it (it has parentheses (() or ()) in the file name)
-		rm $imagefile
-		continue
-	fi
-	exiftran -ai $imagefile
-	convert $imagefile -resize '400x400' 400_$imagefile
+while read -r IMAGE_FILE_INFO_STRING ; do
+    IMAGE_FILE_INFO=($IMAGE_FILE_INFO_STRING)
+
+    IMAGE_FILE_DIRECTORY=${IMAGE_FILE_INFO[0]}
+    IMAGE_FILE_NAME=${IMAGE_FILE_INFO[1]}
+    IMAGE_FILE_PATH=$IMAGE_FILE_DIRECTORY/$IMAGE_FILE_NAME
+    IMAGE_FILE_SIZES=(${IMAGE_FILE_INFO[@]:2})
+
+	exiftran -ai $IMAGE_FILE_PATH
+	for IMAGE_SIZE in ${IMAGE_FILE_SIZES[@]} ; do
+		convert $IMAGE_FILE_PATH -resize "$IMAGE_SIZEx$IMAGE_SIZE" $IMAGE_FILE_DIRECTORY/$IMAGE_SIZE"_"$IMAGE_FILE_NAME
+	done
 done

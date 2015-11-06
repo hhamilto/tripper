@@ -31,18 +31,13 @@ angular.module('CreateTripView', ['ngRoute'])
 				this.uploadProgress = {}
 				xhr.upload.addEventListener('progress', function(progress){
 					this.uploadProgress = progress
-					/*
-					$progress.attr('max',progress.total)
-					$progress.attr('value',progress.loaded*/
+					console.log(progress)
 				}.bind(this))
 			}
 			xhr.onload = function () {
-				if (xhr.status === 200) {
-					appRouter.navigate('trips/'+trip.id, true)
-				} else {
-					alert('An error occurred!')
-				}
+				window.location.href = '#/'
 			}
+			xhr.overrideMimeType('text/plain')//don't parse xml
 			xhr.send(formData)
 		}.bind(this))
 	}

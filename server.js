@@ -23,15 +23,6 @@ app.use(express.static(__dirname + '/public'))
 app.use(bodyParser.text())
 app.use(bodyParser.json())
 
-
-app.get('/trips/:tripId/pics', function(req,res){
-	persistence.Pictures.get({
-		tripId: req.params.tripId
-	}).done(function(pics){
-		res.json(pics)
-	})
-})
-
 //that stupid limit is NOT 10 per second. 
 timeSpacer = 100
 currentGateKey = Promise.resolve()
@@ -91,26 +82,57 @@ app.put('/trips', function(req,res){
 	})
 })
 
+app.get('/trips/:id/photos', function(req,res){
+	
+	db.collection('photos').find({
+		tripId: new mongodb.ObjectId(req.params.id)
+	}).toArray().then(function(photos){
+		res.json(photos)
+	})
+})
+
 app.put('/trips/:id/photos', function(req,res){
 	if (req.busboy) {
+		const fileConversionList = []
 		req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-			//reject bad mimetypes... XXX
+			if(! /.*\.jpe?g$/i.test(filename)){
+				file.resume()
+				return
+			}
+			if(! /^image\/jpeg/.test(mimetype)){
+				file.resume()
+				return
+			}
 			db.collection('photos').insertOneAsync({
 				tripId: new mongodb.ObjectId(req.params.id)
 			}).then(function(result) {
-				var pictureId =result.insertedId;
+				var pictureId = result.insertedId.toString();
 				var filePath = path.join(conf["picture-directory"],pictureId)
+				fileConversionList.push(conf["picture-directory"]+' '+pictureId+" 400")
 				file.pipe(fs.createWriteStream(filePath))
-				res.json({_id:pictureId})
 			})
 		})
 		req.busboy.on('finish', function() {
-			childProcess.exec(path.join(__dirname, 'fixImages.sh'), function(){
-				res.json({sucess:'sucess'})
+			var fixProc = childProcess.exec(path.join(__dirname, 'fixImages.sh'), function(err, stdout){
+				res.end()//mostly to set a content/type so firefox doesn't try to aprase html
 			})
+			fixProc.stdin.write(fileConversionList.join('\n')+'\n')
+			fixProc.stdin.end()
 		})
 		req.pipe(req.busboy)
+	}else{
+		res.sendStatus(500)
 	}
+})
+
+const pictureSizes = ['400']
+app.get('/trips/:tripId/photos/:photoId', function(req,res){
+	var filePath
+	if(_.contains(pictureSizes,req.query.size))
+		filePath = path.join(conf["picture-directory"],req.query.size+'_'+req.params.photoId)
+	else
+		filePath = path.join(conf["picture-directory"],req.params.photoId)
+	res.sendFile(filePath)
 })
 
 module.exports = {
